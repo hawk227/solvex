@@ -1,7 +1,12 @@
 # Provisioning Cloudflare resources
 
-These commands need a Cloudflare account and an interactive login. Run them
-yourself — they create billable resources and cannot be run unattended.
+## Current state
+
+| Resource | Status |
+|---|---|
+| Cloudflare account | `dillkhan33@gmail.com` — `a5701dfaac1e7ba93284163cd1ef3fa4` |
+| D1 `solvex-db` | **Done.** `6ed04555-bec5-422c-a77d-c1c649159678`, region APAC. Migrated and seeded. |
+| R2 `solvex-assets` | **Blocked** — R2 must be enabled once in the dashboard. See step 3. |
 
 ## 1. Authenticate
 
@@ -11,15 +16,23 @@ npx wrangler login
 
 ## 2. Create the D1 database
 
+Already done. For reference, or to recreate on another account:
+
 ```bash
 npx wrangler d1 create solvex-db
 ```
 
-Copy the printed `database_id` into `packages/db/wrangler.jsonc`, replacing
-`local-placeholder`. The same id is used by both apps' `wrangler.jsonc` in
-later phases.
+Copy the printed `database_id` into `packages/db/wrangler.jsonc`. The same id
+is used by both apps' `wrangler.jsonc` in later phases.
 
 ## 3. Create the R2 bucket
+
+**Action needed from you.** R2 must be enabled once per account from the
+Cloudflare dashboard (R2 > Overview) before any bucket can be created — this
+requires adding a payment method, and the CLI cannot do it. R2 has a free tier;
+enabling it does not by itself incur charges.
+
+Once enabled:
 
 ```bash
 npx wrangler r2 bucket create solvex-assets
@@ -31,7 +44,7 @@ Images are public marketing assets; no signed URLs are used.
 
 ## 4. Apply migrations and seed
 
-Local:
+Remote is already migrated and seeded. Run the local pair after cloning:
 
 ```bash
 npm --workspace @solvex/db run db:migrate:local
