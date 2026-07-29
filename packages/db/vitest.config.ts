@@ -7,7 +7,6 @@ const migrations = await readD1Migrations(path.join(import.meta.dirname, 'migrat
 export default defineConfig({
   plugins: [
     cloudflareTest({
-      singleWorker: true,
       wrangler: { configPath: './wrangler.jsonc' },
       miniflare: {
         bindings: { TEST_MIGRATIONS: migrations },

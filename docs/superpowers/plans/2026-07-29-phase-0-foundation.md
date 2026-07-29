@@ -243,7 +243,6 @@ const migrations = await readD1Migrations(path.join(import.meta.dirname, 'migrat
 export default defineConfig({
   plugins: [
     cloudflareTest({
-      singleWorker: true,
       wrangler: { configPath: './wrangler.jsonc' },
       miniflare: {
         bindings: { TEST_MIGRATIONS: migrations },
@@ -269,14 +268,37 @@ migrated database.
 
 - [ ] **Step 7: Create `packages/db/test/env.d.ts`**
 
+0.19 types `env` as `Cloudflare.Env`, not `ProvidedEnv`, so bindings are
+declared by augmenting that global namespace:
+
 ```ts
 import type { D1Migration } from '@cloudflare/vitest-pool-workers';
 
-declare module 'cloudflare:test' {
-  interface ProvidedEnv {
-    DB: D1Database;
-    TEST_MIGRATIONS: D1Migration[];
+declare global {
+  namespace Cloudflare {
+    interface Env {
+      DB: D1Database;
+      TEST_MIGRATIONS: D1Migration[];
+    }
   }
+}
+
+export {};
+```
+
+`packages/db/tsconfig.json` must list all three type packages, or
+`cloudflare:test` will not resolve under `tsc`:
+
+```json
+"types": ["node", "@cloudflare/workers-types", "@cloudflare/vitest-pool-workers/types"]
+```
+
+The `?raw` import in the seed test also needs `packages/db/src/sql.d.ts`:
+
+```ts
+declare module '*.sql?raw' {
+  const content: string;
+  export default content;
 }
 ```
 
