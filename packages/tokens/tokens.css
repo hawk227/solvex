@@ -1,0 +1,76 @@
+/*
+ * SolveX brand tokens, shared by solvex-cms and solvex-webapp.
+ * Orange #ff6300 is taken from logo-files/logo-black.svg; #ffba8e is the
+ * logo's secondary tint.
+ *
+ * No component may hardcode a color, radius, spacing value, or duration.
+ */
+:root {
+  /* Brand */
+  --color-primary: #ff6300;
+  --color-primary-hover: #e55800;
+  --color-primary-tint: #ffba8e;
+  --color-primary-foreground: #ffffff;
+
+  /* Surfaces */
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-card: #ffffff;
+
+  /* Text */
+  --color-text: #0f172a;
+  --color-muted: #717182;
+
+  /* Lines and fields */
+  --color-border: rgb(0 0 0 / 0.1);
+  --color-input-bg: #f8fafc;
+
+  /* Status */
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #d4183d;
+  --color-info: #2563eb;
+
+  /* Type */
+  --font-sans: Inter, system-ui, -apple-system, sans-serif;
+
+  /* Radius */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  /* Spacing — 8px rhythm, per claude-code-design-system.md */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.12);
+
+  /* Motion */
+  --duration-hover: 150ms;
+  --duration-default: 200ms;
+  --duration-modal: 300ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-hover: 0ms;
+    --duration-default: 0ms;
+    --duration-modal: 0ms;
+  }
+}

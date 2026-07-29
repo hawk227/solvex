@@ -210,40 +210,47 @@ Migrations land in `packages/db/migrations`, which is the directory Wrangler's
   "name": "solvex-db",
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
-  "migrations_dir": "migrations",
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "solvex-db",
-      "database_id": "local-placeholder"
+      "database_id": "local-placeholder",
+      "migrations_dir": "migrations"
     }
   ]
 }
 ```
+
+`migrations_dir` belongs inside the D1 binding, not at the top level — Wrangler
+warns and ignores it if placed at the top.
 
 `database_id` is replaced with the real id in Task 12, once the remote database
 is created. Local development and tests do not read it.
 
 - [ ] **Step 5: Create `packages/db/vitest.config.ts`**
 
+Note: `@cloudflare/vitest-pool-workers` 0.19 removed the `/config` subpath and
+`defineWorkersConfig`. The current API is a Vite plugin, `cloudflareTest`,
+exported from the package root.
+
 ```ts
-import { defineWorkersConfig, readD1Migrations } from '@cloudflare/vitest-pool-workers/config';
+import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-pool-workers';
 import path from 'node:path';
+import { defineConfig } from 'vitest/config';
 
 const migrations = await readD1Migrations(path.join(import.meta.dirname, 'migrations'));
 
-export default defineWorkersConfig({
+export default defineConfig({
+  plugins: [
+    cloudflareTest({
+      wrangler: { configPath: './wrangler.jsonc' },
+      miniflare: {
+        bindings: { TEST_MIGRATIONS: migrations },
+      },
+    }),
+  ],
   test: {
     setupFiles: ['./test/apply-migrations.ts'],
-    poolOptions: {
-      workers: {
-        singleWorker: true,
-        wrangler: { configPath: './wrangler.jsonc' },
-        miniflare: {
-          bindings: { TEST_MIGRATIONS: migrations },
-        },
-      },
-    },
   },
 });
 ```
@@ -261,14 +268,37 @@ migrated database.
 
 - [ ] **Step 7: Create `packages/db/test/env.d.ts`**
 
-```ts
-import type { D1Migration } from '@cloudflare/vitest-pool-workers/config';
+0.19 types `env` as `Cloudflare.Env`, not `ProvidedEnv`, so bindings are
+declared by augmenting that global namespace:
 
-declare module 'cloudflare:test' {
-  interface ProvidedEnv {
-    DB: D1Database;
-    TEST_MIGRATIONS: D1Migration[];
+```ts
+import type { D1Migration } from '@cloudflare/vitest-pool-workers';
+
+declare global {
+  namespace Cloudflare {
+    interface Env {
+      DB: D1Database;
+      TEST_MIGRATIONS: D1Migration[];
+    }
   }
+}
+
+export {};
+```
+
+`packages/db/tsconfig.json` must list all three type packages, or
+`cloudflare:test` will not resolve under `tsc`:
+
+```json
+"types": ["node", "@cloudflare/workers-types", "@cloudflare/vitest-pool-workers/types"]
+```
+
+The `?raw` import in the seed test also needs `packages/db/src/sql.d.ts`:
+
+```ts
+declare module '*.sql?raw' {
+  const content: string;
+  export default content;
 }
 ```
 

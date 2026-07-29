@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "solvex-db",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "solvex-db",
+      "database_id": "local-placeholder",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
