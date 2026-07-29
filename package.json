@@ -1,0 +1,14 @@
+{
+  "name": "solvex",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "workspaces": ["packages/*", "solvex-cms", "solvex-webapp"],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}
