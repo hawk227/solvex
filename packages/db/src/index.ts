@@ -8,3 +8,5 @@ export function getDb(d1: D1Database) {
 }
 
 export type Db = ReturnType<typeof getDb>;
+
+export * from './pricing';
