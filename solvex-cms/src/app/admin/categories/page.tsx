@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
 import { CategoryForm } from './category-form';
-import { ActiveToggle } from './active-toggle';
+import { ActiveToggle } from '@/components/ui/active-toggle';
 import { setCategoryActive } from './actions';
 
 export const metadata = { title: 'Categories — SolveX Admin' };
