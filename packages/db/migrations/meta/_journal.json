@@ -22,6 +22,13 @@
       "when": 1785342916530,
       "tag": "0002_glorious_surge",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1785342977831,
+      "tag": "0003_blue_magus",
+      "breakpoints": true
     }
   ]
 }
