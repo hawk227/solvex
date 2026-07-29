@@ -1,0 +1,18 @@
+/*
+ * Back-office density. Desktop-only, intentionally denser than the webapp.
+ * Values measured from the RedeemX back-office reference; see spec §9.1.
+ */
+:root {
+  --cms-sidebar-width: 262px;
+  --cms-topbar-height: 56px;
+
+  --cms-control-height: 36px;
+  --cms-input-height: 38px;
+  --cms-control-radius: var(--radius-lg);
+  --cms-card-radius: var(--radius-md);
+
+  --cms-font-size-body: 13px;
+  --cms-font-size-label: 13px;
+  --cms-font-size-table-head: 11px;
+  --cms-font-size-page-title: 32px;
+}
