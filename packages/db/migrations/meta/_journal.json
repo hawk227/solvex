@@ -43,6 +43,13 @@
       "when": 1785343089845,
       "tag": "0005_strange_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1785345008108,
+      "tag": "0006_stiff_post",
+      "breakpoints": true
     }
   ]
 }
