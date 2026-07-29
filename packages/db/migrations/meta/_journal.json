@@ -15,6 +15,13 @@
       "when": 1785342862938,
       "tag": "0001_quick_fixer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785342916530,
+      "tag": "0002_glorious_surge",
+      "breakpoints": true
     }
   ]
 }
