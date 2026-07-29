@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "solvex-cms",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "solvex-db",
+      "database_id": "6ed04555-bec5-422c-a77d-c1c649159678",
+      "migrations_dir": "../packages/db/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ASSETS_BUCKET",
+      "bucket_name": "solvex-assets"
+    }
+  ],
+  "vars": {
+    "CDN_BASE_URL": "https://cdn.solvex.example"
+  }
+}
