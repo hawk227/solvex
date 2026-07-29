@@ -36,6 +36,13 @@
       "when": 1785343034711,
       "tag": "0004_yellow_nicolaos",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1785343089845,
+      "tag": "0005_strange_ricochet",
+      "breakpoints": true
     }
   ]
 }
