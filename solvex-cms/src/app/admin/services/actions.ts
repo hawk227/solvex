@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { schema, slugify, isUniqueViolation, parseList, parseFaqs } from '@solvex/db';
+import { schema, slugify, isUniqueViolation, parseList, parseFaqs, parseProse } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireAdmin } from '@/lib/session';
 import { optionalInt, optionalText } from '@/lib/form';
@@ -118,7 +118,7 @@ export async function updateServiceContent(id: number, formData: FormData): Prom
   await db()
     .update(schema.services)
     .set({
-      aboutMd: parsed.data.aboutMd || null,
+      aboutMd: parseProse(parsed.data.aboutMd),
       includedJson: included.length ? included : null,
       notIncludedJson: notIncluded.length ? notIncluded : null,
       faqsJson: faqs.length ? faqs : null,

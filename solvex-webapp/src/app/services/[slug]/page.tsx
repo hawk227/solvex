@@ -5,6 +5,7 @@ import { Container, Section } from '@/components/layout/container';
 import { Button } from '@/components/ui/button';
 import { Faqs } from '@/components/ui/faqs';
 import { PriceSelector } from './price-selector';
+import { proseParagraphs } from '@solvex/db';
 import { getServiceBySlug, getServicePrices, getServiceVariables } from '@/lib/catalog';
 import { formatDuration, formatTaka } from '@/lib/format';
 
@@ -108,13 +109,9 @@ export default async function ServiceDetailPage({ params }: PageProps<'/services
                     rich formatting here.
                   */}
                   <div className="mt-3 max-w-[var(--web-measure)] space-y-3 text-[var(--color-muted)]">
-                    {service.aboutMd
-                      .split(/\n\s*\n/)
-                      .map((para) => para.trim())
-                      .filter(Boolean)
-                      .map((para, i) => (
-                        <p key={i}>{para}</p>
-                      ))}
+                    {proseParagraphs(service.aboutMd).map((para, i) => (
+                      <p key={i}>{para}</p>
+                    ))}
                   </div>
                 </section>
               )}

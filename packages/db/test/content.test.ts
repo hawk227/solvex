@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { faqsToText, listToText, parseFaqs, parseList } from '../src/content';
+import {
+  faqsToText,
+  listToText,
+  parseFaqs,
+  parseList,
+  parseProse,
+  proseParagraphs,
+} from '../src/content';
 
 describe('parseList', () => {
   it('splits lines and trims', () => {
@@ -51,5 +58,31 @@ describe('round trip', () => {
   it('survives text -> parsed -> text for faqs', () => {
     const text = 'How long?\nAbout an hour.\n\nGas refill?\nNot included.';
     expect(faqsToText(parseFaqs(text))).toBe(text);
+  });
+});
+
+describe('CRLF handling', () => {
+  it('treats CRLF the same as LF in lists', () => {
+    expect(parseList('a\r\nb\r\n\r\nc')).toEqual(['a', 'b', 'c']);
+  });
+
+  it('treats CRLF the same as LF in faqs', () => {
+    expect(parseFaqs('Q?\r\nA.\r\n\r\nQ2?\r\nA2.')).toEqual([
+      { q: 'Q?', a: 'A.' },
+      { q: 'Q2?', a: 'A2.' },
+    ]);
+  });
+
+  it('stores prose with normalised newlines, or null when blank', () => {
+    expect(parseProse('One.\r\n\r\nTwo.')).toBe('One.\n\nTwo.');
+    expect(parseProse('   ')).toBeNull();
+    expect(parseProse('')).toBeNull();
+    expect(parseProse(null)).toBeNull();
+  });
+
+  it('splits prose into paragraphs, CRLF or not', () => {
+    expect(proseParagraphs('One.\r\n\r\nTwo.')).toEqual(['One.', 'Two.']);
+    expect(proseParagraphs('One.\n\n\nTwo.')).toEqual(['One.', 'Two.']);
+    expect(proseParagraphs(null)).toEqual([]);
   });
 });

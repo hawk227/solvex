@@ -35,6 +35,10 @@ export default async function ServicesPage() {
         active: schema.services.active,
         priceCount: servicePriceCount,
         groupCount: variableGroupCount,
+        aboutMd: schema.services.aboutMd,
+        includedJson: schema.services.includedJson,
+        notIncludedJson: schema.services.notIncludedJson,
+        faqsJson: schema.services.faqsJson,
       })
       .from(schema.services)
       .innerJoin(schema.categories, eq(schema.categories.id, schema.services.categoryId))
@@ -72,6 +76,7 @@ export default async function ServicesPage() {
                 <tr>
                   <Th>Service</Th>
                   <Th>Category</Th>
+                  <Th>Content</Th>
                   <Th>Pricing</Th>
                   <Th>Duration</Th>
                   <Th>Status</Th>
@@ -80,7 +85,7 @@ export default async function ServicesPage() {
               </thead>
               <tbody>
                 {rows.length === 0 && (
-                  <EmptyRow colSpan={6}>No services yet.</EmptyRow>
+                  <EmptyRow colSpan={7}>No services yet.</EmptyRow>
                 )}
                 {rows.map((row) => (
                   <Tr key={row.id}>
@@ -98,6 +103,27 @@ export default async function ServicesPage() {
                       )}
                     </Td>
                     <Td className="text-[var(--color-muted)]">{row.categoryName}</Td>
+                    <Td>
+                      {(() => {
+                        const filled = [
+                          Boolean(row.aboutMd),
+                          (row.includedJson?.length ?? 0) > 0,
+                          (row.notIncludedJson?.length ?? 0) > 0,
+                          (row.faqsJson?.length ?? 0) > 0,
+                        ].filter(Boolean).length;
+                        return (
+                          <Link
+                            href={`/admin/services/${row.id}`}
+                            className="hover:underline"
+                            title="About, What's included, Not included, FAQs"
+                          >
+                            <Badge tone={filled === 4 ? 'success' : filled === 0 ? 'danger' : 'warning'}>
+                              {filled} of 4 sections
+                            </Badge>
+                          </Link>
+                        );
+                      })()}
+                    </Td>
                     <Td>
                       {row.priceCount === 0 ? (
                         <Badge tone="danger">Unpriced</Badge>
@@ -118,6 +144,12 @@ export default async function ServicesPage() {
                     </Td>
                     <Td>
                       <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/admin/services/${row.id}`}
+                          className="text-xs text-[var(--color-primary)] hover:underline"
+                        >
+                          Edit content
+                        </Link>
                         <ActiveToggle
                           id={row.id}
                           active={row.active}

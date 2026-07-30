@@ -5,10 +5,19 @@ import type { Faq } from './schema/catalog';
  * because they define the shape those columns are allowed to hold.
  */
 
+/**
+ * Browsers submit textarea content with CRLF line endings. Normalising here
+ * means every parser and every consumer downstream sees plain "\n", instead of
+ * each one having to remember to trim a stray carriage return.
+ */
+function normaliseNewlines(raw: string): string {
+  return raw.replace(/\r\n?/g, '\n');
+}
+
 /** One item per line; blank lines and surrounding whitespace dropped. */
 export function parseList(raw: string | null | undefined): string[] {
   if (!raw) return [];
-  return raw
+  return normaliseNewlines(raw)
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
@@ -24,7 +33,7 @@ export function parseList(raw: string | null | undefined): string[] {
  */
 export function parseFaqs(raw: string | null | undefined): Faq[] {
   if (!raw) return [];
-  return raw
+  return normaliseNewlines(raw)
     .split(/\n\s*\n/)
     .map((block) => {
       const lines = block
@@ -46,4 +55,20 @@ export function listToText(items: string[] | null | undefined): string {
 /** Inverse of parseFaqs, for populating the edit form. */
 export function faqsToText(faqs: Faq[] | null | undefined): string {
   return (faqs ?? []).map((f) => `${f.q}\n${f.a}`).join('\n\n');
+}
+
+/** Normalise free-text prose before storing it (about_md and similar). */
+export function parseProse(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const cleaned = normaliseNewlines(raw).trim();
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+/** Split prose into paragraphs for rendering. */
+export function proseParagraphs(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  return normaliseNewlines(raw)
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 }
