@@ -17,6 +17,6 @@
     }
   ],
   "vars": {
-    "CDN_BASE_URL": "https://cdn.solvex.example"
+    "CDN_BASE_URL": "https://pub-8eb424560a9d48c8a3c365d020301024.r2.dev"
   }
 }

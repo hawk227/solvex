@@ -6,7 +6,8 @@
 |---|---|
 | Cloudflare account | `dillkhan33@gmail.com` — `a5701dfaac1e7ba93284163cd1ef3fa4` |
 | D1 `solvex-db` | **Done.** `6ed04555-bec5-422c-a77d-c1c649159678`, region APAC. Migrated and seeded. |
-| R2 `solvex-assets` | **Blocked** — R2 must be enabled once in the dashboard. See step 3. |
+| R2 `solvex-assets` | **Done.** Public reads at `https://pub-8eb424560a9d48c8a3c365d020301024.r2.dev` (r2.dev — development only, see step 3). |
+| Remote migrations | **Done.** Applied through `0008`. |
 
 ## 1. Authenticate
 
@@ -27,16 +28,26 @@ is used by both apps' `wrangler.jsonc` in later phases.
 
 ## 3. Create the R2 bucket
 
-**Action needed from you.** R2 must be enabled once per account from the
-Cloudflare dashboard (R2 > Overview) before any bucket can be created — this
-requires adding a payment method, and the CLI cannot do it. R2 has a free tier;
-enabling it does not by itself incur charges.
-
-Once enabled:
+Already done. For reference:
 
 ```bash
 npx wrangler r2 bucket create solvex-assets
+npx wrangler r2 bucket dev-url enable solvex-assets
 ```
+
+### The r2.dev URL is not for production
+
+`CDN_BASE_URL` currently points at the managed `r2.dev` address. Cloudflare
+rate-limits that endpoint and documents it as unsuitable for production traffic.
+
+**Before launch**, attach a custom domain (R2 > solvex-assets > Settings >
+Public access > Custom domain), e.g. `cdn.solvex.com.bd`, then update
+`CDN_BASE_URL` in BOTH `solvex-cms/wrangler.jsonc` and
+`solvex-webapp/wrangler.jsonc`. Existing image keys keep working — only the host
+changes.
+
+Note the whole bucket is publicly readable by design: it holds category and
+service images for the public website. Never put customer data in it.
 
 Attach a public custom domain (for example `cdn.solvex.com.bd`) in the
 Cloudflare dashboard under R2 > solvex-assets > Settings > Public access.
