@@ -94,3 +94,40 @@ further admin is invited from inside the CMS.
 | `BETTER_AUTH_SECRET` | both | Signs admin session cookies. 32+ random bytes. |
 | `BETTER_AUTH_URL` | both | Public origin of the app. |
 | `SETUP_TOKEN` | CMS, temporary | Guards the one-shot first-admin route. Remove after use. |
+
+## 6. Email (Cloudflare Email Service)
+
+Transactional email uses the **REST API**, not the Workers `send_email` binding —
+the binding needs `cloudflare:email`, which OpenNext's bundler cannot resolve.
+
+1. Cloudflare dashboard → **Compute → Email Service → Email Sending → Onboard
+   Domain**. Cloudflare adds the MX, SPF, DKIM and DMARC records. The domain must
+   already use Cloudflare DNS.
+2. Create an API token with **Email Sending: Edit**.
+3. Set both secrets on the webapp:
+
+```bash
+npx wrangler secret put CF_ACCOUNT_ID
+npx wrangler secret put CF_EMAIL_API_TOKEN
+```
+
+With these unset, local dev logs the email to the console instead of sending, so
+signup is testable. In production a missing credential **throws** — silently
+dropping a verification code would break signup invisibly.
+
+**Before Phase 3 goes live, verify inbox placement to a real Gmail and Outlook
+address.** OTP mail landing in spam kills signup with no error on our side.
+
+## Required secrets (updated)
+
+| Name | App | Purpose |
+|---|---|---|
+| `BETTER_AUTH_SECRET` | both | Signs session cookies. 32+ random bytes. Different value per app. |
+| `BETTER_AUTH_URL` | both | Public origin. |
+| `SETUP_TOKEN` | CMS, temporary | Guards the one-shot first-admin route. Remove after use. |
+| `CF_ACCOUNT_ID` | webapp | Cloudflare account for the email REST API. |
+| `CF_EMAIL_API_TOKEN` | webapp | Token with Email Sending: Edit. |
+
+Note: these are read from the **Cloudflare env**, not `process.env`. Better Auth
+defaults to `process.env`, so the secret and base URL are passed to it explicitly
+in each app's `src/lib/auth.ts`.

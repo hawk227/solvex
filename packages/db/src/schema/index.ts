@@ -5,3 +5,4 @@ export * from './scheduling';
 export * from './orders';
 export * from './referral';
 export * from './admin-auth';
+export * from './customer-auth';

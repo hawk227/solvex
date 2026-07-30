@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { user } from './customer-auth';
 
 /** Serviceable areas. Booking is restricted to active areas. */
 export const areas = sqliteTable('areas', {
@@ -10,12 +11,13 @@ export const areas = sqliteTable('areas', {
 });
 
 /**
- * Customer profile. `userId` is the Better Auth user id (a string). The
- * foreign key to Better Auth's `user` table is added in Phase 1, once that
- * table exists.
+ * Customer profile, keyed by the Better Auth user id. Deleting the account
+ * removes the profile with it.
  */
 export const profiles = sqliteTable('profiles', {
-  userId: text('user_id').primaryKey(),
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
   fullName: text('full_name').notNull(),
   phone: text('phone').notNull(),
   address: text('address').notNull(),

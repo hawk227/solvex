@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { nextCookies } from 'better-auth/next-js';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { schema } from '@solvex/db';
 import { db } from './cf';
 
@@ -15,8 +16,28 @@ import { db } from './cf';
  * existing admin. A public signup endpoint on the back-office would be a way
  * in for anyone who finds the URL.
  */
+/**
+ * Wrangler secrets and .dev.vars land in the Cloudflare env, NOT in process.env,
+ * which is where Better Auth looks by default. They must be passed explicitly
+ * or the session secret would be silently unset in production.
+ */
+function authEnv() {
+  const env = getCloudflareContext().env as unknown as {
+    BETTER_AUTH_SECRET?: string;
+    BETTER_AUTH_URL?: string;
+  };
+  if (!env.BETTER_AUTH_SECRET) {
+    throw new Error('BETTER_AUTH_SECRET is not set. Refusing to sign sessions with no secret.');
+  }
+  return { secret: env.BETTER_AUTH_SECRET, baseURL: env.BETTER_AUTH_URL };
+}
+
 export function auth() {
+  const { secret, baseURL } = authEnv();
+
   return betterAuth({
+    secret,
+    ...(baseURL ? { baseURL } : {}),
     database: drizzleAdapter(db(), {
       provider: 'sqlite',
       schema: {
