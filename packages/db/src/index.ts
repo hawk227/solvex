@@ -15,3 +15,4 @@ export * from './booking';
 export * from "./slug";
 export * from "./errors";
 export * from "./content";
+export * from "./aggregates";

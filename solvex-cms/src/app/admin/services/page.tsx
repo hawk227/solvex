@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { asc, count, eq, sql } from 'drizzle-orm';
-import { schema } from '@solvex/db';
+import { asc, eq } from 'drizzle-orm';
+import { schema, servicePriceCount, variableGroupCount } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireAdmin } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
@@ -33,12 +33,8 @@ export default async function ServicesPage() {
         durationMin: schema.services.durationMin,
         sort: schema.services.sort,
         active: schema.services.active,
-        priceCount: sql<number>`(
-          SELECT count(*) FROM service_prices sp WHERE sp.service_id = ${schema.services.id}
-        )`,
-        groupCount: sql<number>`(
-          SELECT count(*) FROM variable_groups vg WHERE vg.service_id = ${schema.services.id}
-        )`,
+        priceCount: servicePriceCount,
+        groupCount: variableGroupCount,
       })
       .from(schema.services)
       .innerJoin(schema.categories, eq(schema.categories.id, schema.services.categoryId))

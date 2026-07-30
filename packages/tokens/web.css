@@ -1,0 +1,46 @@
+/*
+ * Public webapp scale. Deliberately looser than the CMS: mobile-first, 44px
+ * touch targets, 16px body — per claude-code-design-system.md, which stays
+ * binding here because customers book on phones.
+ */
+:root {
+  --web-header-height: 70px;
+
+  /* Poppins on the public site; Inter stays the CMS face. */
+  --web-font-sans: var(--font-poppins), Inter, system-ui, sans-serif;
+
+  --web-control-height: 44px;
+  --web-control-height-lg: 52px;
+  --web-input-height: 48px;
+  --web-search-height: 56px;
+
+  --web-control-radius: var(--radius-md);
+  --web-card-radius: var(--radius-lg);
+
+  --web-font-size-body: 16px;
+  --web-font-size-small: 14px;
+  --web-font-size-caption: 12px;
+
+  /* Section rhythm from the design system: 96 desktop / 72 tablet / 56 mobile */
+  --web-section-y: 56px;
+
+  --web-container: 1280px;
+  --web-container-pad: 16px;
+
+  /* Readable measure cap */
+  --web-measure: 70ch;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --web-section-y: 72px;
+    --web-container-pad: 24px;
+  }
+}
+
+@media (min-width: 992px) {
+  :root {
+    --web-section-y: 96px;
+    --web-container-pad: 32px;
+  }
+}
