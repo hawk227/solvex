@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+@import '@solvex/tokens/tokens.css';
+@import '@solvex/tokens/web.css';
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-tint: var(--color-primary-tint);
+  --color-primary-foreground: var(--color-primary-foreground);
+
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-card: var(--color-card);
+
+  --color-text: var(--color-text);
+  --color-muted: var(--color-muted);
+
+  --color-border: var(--color-border);
+  --color-input-bg: var(--color-input-bg);
+
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-info: var(--color-info);
+
+  --font-sans: var(--font-poppins), var(--font-sans);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--web-font-size-body);
+  line-height: 1.6;
+}
+
+/* Visible focus everywhere — WCAG AA, design system section 15. */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Horizontal category rail: scrollable without scrollbar chrome. */
+.rail {
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
