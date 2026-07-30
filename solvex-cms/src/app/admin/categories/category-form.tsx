@@ -38,27 +38,33 @@ export function CategoryForm({ category }: { category?: CategoryRow }) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(category?.imageUrl ?? null);
   const [removeExisting, setRemoveExisting] = useState(false);
+  /** Reading and sniffing the file is async; submitting mid-check dropped it. */
+  const [checkingFile, setCheckingFile] = useState(false);
 
   async function pickFile(next: File | undefined) {
     if (!next) return;
     setError(undefined);
+    setCheckingFile(true);
+    try {
+      if (next.size > MAX_IMAGE_BYTES) {
+        setError('Images must be 5 MB or smaller.');
+        return;
+      }
 
-    if (next.size > MAX_IMAGE_BYTES) {
-      setError('Images must be 5 MB or smaller.');
-      return;
+      // Sniffed here too so an obviously wrong file is caught before upload. The
+      // server-side check is still the one that decides.
+      const check = validateImage(new Uint8Array(await next.arrayBuffer()));
+      if (!check.ok) {
+        setError(check.error);
+        return;
+      }
+
+      setFile(next);
+      setRemoveExisting(false);
+      setPreview(URL.createObjectURL(next));
+    } finally {
+      setCheckingFile(false);
     }
-
-    // Sniffed here too so an obviously wrong file is caught before upload. The
-    // server-side check is still the one that decides.
-    const check = validateImage(new Uint8Array(await next.arrayBuffer()));
-    if (!check.ok) {
-      setError(check.error);
-      return;
-    }
-
-    setFile(next);
-    setRemoveExisting(false);
-    setPreview(URL.createObjectURL(next));
   }
 
   function reset() {
@@ -93,12 +99,23 @@ export function CategoryForm({ category }: { category?: CategoryRow }) {
       } else if (file) {
         const upload = new FormData();
         upload.set('file', file);
-        const uploaded = await uploadImage('categories', id, upload);
-        if (!uploaded.ok) {
-          // The category itself saved. Say exactly that rather than implying the
-          // whole thing failed and inviting a duplicate attempt.
+        try {
+          const uploaded = await uploadImage('categories', id, upload);
+          if (!uploaded.ok) {
+            // The category itself saved. Say exactly that rather than implying
+            // the whole thing failed and inviting a duplicate attempt.
+            setPending(false);
+            setError(`Category saved, but the image did not upload: ${uploaded.error}`);
+            router.refresh();
+            return;
+          }
+        } catch {
+          // A rejected action — body too large, connection dropped — used to
+          // leave the dialog stuck on "Saving…" with nothing said at all.
           setPending(false);
-          setError(`Category saved, but the image did not upload: ${uploaded.error}`);
+          setError(
+            'Category saved, but the image could not be uploaded. Try a smaller file, or add it by editing the category.',
+          );
           router.refresh();
           return;
         }
@@ -229,8 +246,14 @@ export function CategoryForm({ category }: { category?: CategoryRow }) {
             <DialogClose asChild>
               <Button variant="secondary">Cancel</Button>
             </DialogClose>
-            <Button type="submit" disabled={pending}>
-              {pending ? 'Saving…' : editing ? 'Save changes' : 'Create category'}
+            <Button type="submit" disabled={pending || checkingFile}>
+              {pending
+                ? 'Saving…'
+                : checkingFile
+                  ? 'Checking image…'
+                  : editing
+                    ? 'Save changes'
+                    : 'Create category'}
             </Button>
           </div>
         </form>
