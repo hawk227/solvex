@@ -15,4 +15,10 @@
   --cms-font-size-label: 13px;
   --cms-font-size-table-head: 11px;
   --cms-font-size-page-title: 32px;
+
+  /*
+   * Sign-in backdrop. Supplied as an exact brand gradient, so the stops live
+   * here as a single token rather than being inlined at the use site.
+   */
+  --cms-auth-gradient: linear-gradient(135deg, #132147, #324da9, #6f6bea, #f3a7c5);
 }
