@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { asc, eq } from 'drizzle-orm';
 import { schema, buildComboKey, faqsToText, listToText } from '@solvex/db';
 import { db, imageUrl } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardBody } from '@/components/ui/card';
@@ -14,7 +14,7 @@ import { VariablesEditor, type Group } from './variables-editor';
 import { PriceMatrix, type MatrixRow } from './price-matrix';
 
 export default async function ServiceDetailPage({ params }: PageProps<'/admin/services/[id]'>) {
-  await requireAdmin();
+  await requireView('catalog');
 
   // Next 16: params is a Promise.
   const { id } = await params;

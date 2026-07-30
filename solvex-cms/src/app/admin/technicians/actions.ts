@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { isUniqueViolation, schema, setTechnicianCoverage } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 import { optionalText } from '@/lib/form';
 import { normaliseBdMobile } from '@/lib/phone';
 
@@ -54,7 +54,7 @@ function parse(formData: FormData) {
 }
 
 export async function createTechnician(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('technicians');
 
   const parsed = parse(formData);
   if (!parsed.success) {
@@ -90,7 +90,7 @@ export async function createTechnician(formData: FormData): Promise<ActionResult
 }
 
 export async function updateTechnician(id: number, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('technicians');
 
   const parsed = parse(formData);
   if (!parsed.success) {
@@ -133,7 +133,7 @@ export async function updateTechnician(id: number, formData: FormData): Promise<
  * assigned to new work but stays on the orders they already did.
  */
 export async function setTechnicianActive(id: number, active: boolean): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('technicians');
   await db().update(schema.technicians).set({ active }).where(eq(schema.technicians.id, id));
   revalidatePath('/admin/technicians');
   revalidatePath('/admin/orders');

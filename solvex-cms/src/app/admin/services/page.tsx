@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { asc, eq } from 'drizzle-orm';
 import { schema, servicePriceCount, variableGroupCount } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ import { setServiceActive } from './actions';
 export const metadata = { title: 'Services — SolveX Admin' };
 
 export default async function ServicesPage() {
-  await requireAdmin();
+  await requireView('catalog');
   const d = db();
 
   const [categories, rows] = await Promise.all([

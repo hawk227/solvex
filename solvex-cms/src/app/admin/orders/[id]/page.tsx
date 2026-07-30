@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTechnicianOptions } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +35,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 export default async function OrderDetailPage({ params }: PageProps<'/admin/orders/[id]'>) {
-  await requireAdmin();
+  await requireView('orders');
 
   const { id } = await params;
   const orderId = Number.parseInt(id, 10);

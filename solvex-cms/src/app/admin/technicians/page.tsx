@@ -1,7 +1,7 @@
 import { asc, eq, sql } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ import { setTechnicianActive } from './actions';
 export const metadata = { title: 'Technicians — SolveX Admin' };
 
 export default async function TechniciansPage() {
-  await requireAdmin();
+  await requireView('technicians');
   const d = db();
 
   // Table-qualified SQL text: interpolating Drizzle columns into a raw template

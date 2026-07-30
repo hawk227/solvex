@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema, slugify, isUniqueViolation } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 import { optionalText } from '@/lib/form';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -22,7 +22,7 @@ const CategoryInput = z.object({
  * directly, so the layout check alone would not protect it.
  */
 export async function createCategory(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const parsed = CategoryInput.safeParse({
     name: formData.get('name'),
@@ -53,7 +53,7 @@ export async function createCategory(formData: FormData): Promise<ActionResult> 
 }
 
 export async function updateCategory(id: number, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const parsed = CategoryInput.safeParse({
     name: formData.get('name'),
@@ -78,7 +78,7 @@ export async function updateCategory(id: number, formData: FormData): Promise<Ac
 }
 
 export async function setCategoryActive(id: number, active: boolean): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   await db().update(schema.categories).set({ active }).where(eq(schema.categories.id, id));
 

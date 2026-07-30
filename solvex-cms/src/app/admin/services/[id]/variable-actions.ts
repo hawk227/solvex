@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -15,7 +15,7 @@ export async function addVariableGroup(
   serviceId: number,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const parsed = Name.safeParse(formData.get('name'));
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid.' };
@@ -43,7 +43,7 @@ export async function deleteVariableGroup(
   serviceId: number,
   groupId: number,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const d = db();
   // Options cascade with the group; prices are cleared for the same reason as
@@ -60,7 +60,7 @@ export async function addVariableOption(
   groupId: number,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const parsed = Name.safeParse(formData.get('label'));
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid.' };
@@ -85,7 +85,7 @@ export async function deleteVariableOption(
   serviceId: number,
   optionId: number,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const d = db();
   await d.delete(schema.variableOptions).where(eq(schema.variableOptions.id, optionId));

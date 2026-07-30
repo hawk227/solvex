@@ -1,7 +1,7 @@
 import { asc } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ import { setAreaActive } from './actions';
 export const metadata = { title: 'Areas — SolveX Admin' };
 
 export default async function AreasPage() {
-  await requireAdmin();
+  await requireView('settings');
 
   const rows = await db()
     .select()

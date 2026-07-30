@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema, slugify, isUniqueViolation, parseList, parseFaqs, parseProse } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 import { optionalInt, optionalText } from '@/lib/form';
 
 export type ActionResult = { ok: true; id?: number } | { ok: false; error: string };
@@ -29,7 +29,7 @@ function parseBasics(formData: FormData) {
 }
 
 export async function createService(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const parsed = parseBasics(formData);
   if (!parsed.success) {
@@ -65,7 +65,7 @@ export async function createService(formData: FormData): Promise<ActionResult> {
 }
 
 export async function updateServiceBasics(id: number, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const parsed = parseBasics(formData);
   if (!parsed.success) {
@@ -99,7 +99,7 @@ const ContentInput = z.object({
 });
 
 export async function updateServiceContent(id: number, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const parsed = ContentInput.safeParse({
     aboutMd: formData.get('aboutMd'),
@@ -130,7 +130,7 @@ export async function updateServiceContent(id: number, formData: FormData): Prom
 }
 
 export async function setServiceActive(id: number, active: boolean): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
   await db().update(schema.services).set({ active }).where(eq(schema.services.id, id));
   revalidatePath('/admin/services');
   return { ok: true };

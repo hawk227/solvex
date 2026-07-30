@@ -1,4 +1,4 @@
-import { count } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/cf';
@@ -71,6 +71,13 @@ export async function POST(req: Request) {
     accountId: user.id,
     password: await ctx.password.hash(password),
   });
+
+  // The first account is an Owner: full access, and the only role that can
+  // administer employees. Without this nobody could ever grant anyone anything.
+  await db()
+    .update(schema.adminUser)
+    .set({ isOwner: true, active: true, mustChangePassword: false })
+    .where(eq(schema.adminUser.id, user.id));
 
   return Response.json({ ok: true, id: user.id, email: user.email }, { status: 201 });
 }

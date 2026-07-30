@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { bucket, db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 import { CONTENT_TYPE, MAX_IMAGE_BYTES, imageKeyFor, validateImage } from '@/lib/upload';
 
 export type UploadResult = { ok: true; key: string } | { ok: false; error: string };
@@ -29,7 +29,7 @@ export async function uploadImage(
   id: number,
   formData: FormData,
 ): Promise<UploadResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const file = formData.get('file');
   if (!(file instanceof File)) return { ok: false, error: 'No file was provided.' };
@@ -76,7 +76,7 @@ export async function uploadImage(
 }
 
 export async function removeImage(target: Target, id: number): Promise<UploadResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const table = TABLE[target];
   const d = db();

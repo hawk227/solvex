@@ -27,3 +27,4 @@ export type { Faq } from './schema/catalog';
 export * from "./referral-payout";
 export * from "./analytics";
 export * from "./technicians";
+export * from "./permissions";

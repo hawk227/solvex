@@ -16,6 +16,31 @@ export const adminUser = sqliteTable('admin_user', {
   email: text('email').notNull().unique(),
   emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
   image: text('image'),
+
+  /**
+   * Owners implicitly hold `manage` on every module and are the only employees
+   * who may edit anyone's permissions. Kept out of the permission grid on
+   * purpose: if "can administer employees" were just another grid cell, a
+   * manager could grant it to themselves and the model would be decorative.
+   */
+  isOwner: integer('is_owner', { mode: 'boolean' }).notNull().default(false),
+
+  /** Employees are deactivated, never deleted, so past actions stay attributable. */
+  active: integer('active', { mode: 'boolean' }).notNull().default(true),
+
+  /** Set when an owner issues a temporary password. Blocks every guarded route. */
+  mustChangePassword: integer('must_change_password', { mode: 'boolean' })
+    .notNull()
+    .default(false),
+
+  /**
+   * When the temporary password was issued. An unused temporary password expires,
+   * because it travels over chat and should not stay valid indefinitely.
+   */
+  tempPasswordIssuedAt: integer('temp_password_issued_at', { mode: 'timestamp_ms' }),
+
+  createdBy: text('created_by'),
+  lastLoginAt: integer('last_login_at', { mode: 'timestamp_ms' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .$defaultFn(() => new Date()),

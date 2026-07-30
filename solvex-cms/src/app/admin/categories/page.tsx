@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { asc, count, eq } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db, imageUrl } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { ImageUpload } from '@/components/ui/image-upload';
@@ -15,7 +15,7 @@ import { setCategoryActive } from './actions';
 export const metadata = { title: 'Categories — SolveX Admin' };
 
 export default async function CategoriesPage() {
-  await requireAdmin();
+  await requireView('catalog');
 
   const rows = await db()
     .select({

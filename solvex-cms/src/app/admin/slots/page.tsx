@@ -1,7 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ import { setSlotActive } from './actions';
 export const metadata = { title: 'Slots — SolveX Admin' };
 
 export default async function SlotsPage() {
-  await requireAdmin();
+  await requireView('settings');
   const d = db();
 
   const [slots, overrides, defaultCapacity] = await Promise.all([
