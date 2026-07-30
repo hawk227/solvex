@@ -1,4 +1,7 @@
 import { redirect } from 'next/navigation';
+import { eq, sql } from 'drizzle-orm';
+import { can, schema } from '@solvex/db';
+import { db } from '@/lib/cf';
 import { getCurrentEmployee } from '@/lib/session';
 import { Sidebar } from '@/components/layout/sidebar';
 
@@ -22,9 +25,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!employee) redirect('/login');
   if (employee.mustChangePassword) redirect('/change-password');
 
+  // Only counted for employees who can actually open the orders list — showing a
+  // badge for a page they cannot reach would be noise.
+  let pendingOrders = 0;
+  if (can(employee, 'orders', 'view')) {
+    const [row] = await db()
+      .select({ n: sql<number>`count(*)` })
+      .from(schema.orders)
+      .where(eq(schema.orders.status, 'PENDING'));
+    pendingOrders = Number(row?.n ?? 0);
+  }
+
   return (
     <div className="flex min-h-screen">
-      <Sidebar employee={employee} />
+      <Sidebar employee={employee} pendingOrders={pendingOrders} />
       <div className="flex min-w-0 flex-1 flex-col">{children}</div>
     </div>
   );
