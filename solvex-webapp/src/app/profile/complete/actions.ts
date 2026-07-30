@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { schema, isUniqueViolation } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireCustomer } from '@/lib/session';
+import { audit } from '@/lib/audit';
 import { normaliseBdMobile } from '@/lib/phone';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -86,6 +87,17 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
       }
     }
   }
+
+  // Which fields were set, not their contents. The audit database should not
+  // become a second copy of every customer's home address and phone number —
+  // those already live in `profiles`, under the deletion rules that apply there.
+  await audit({
+    action: existing.length > 0 ? 'profile.update' : 'profile.create',
+    targetType: 'profile',
+    targetId: customer.id,
+    targetLabel: fullName,
+    detail: { areaId, phoneSet: Boolean(phone), addressSet: Boolean(address) },
+  });
 
   revalidatePath('/account');
   revalidatePath('/profile/complete');

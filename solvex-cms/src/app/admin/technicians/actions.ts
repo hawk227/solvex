@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { isUniqueViolation, schema, setTechnicianCoverage } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 import { optionalText } from '@/lib/form';
 import { normaliseBdMobile } from '@/lib/phone';
 
@@ -79,6 +80,15 @@ export async function createTechnician(formData: FormData): Promise<ActionResult
 
     if (row) await setTechnicianCoverage(db(), row.id, categoryIds, areaIds);
 
+    await audit({
+      action: 'technicians.create',
+      module: 'technicians',
+      targetType: 'technician',
+      targetId: row?.id,
+      targetLabel: fullName,
+      detail: { fullName, phone, baseArea, categoryIds, areaIds },
+    });
+
     revalidatePath('/admin/technicians');
     return { ok: true, id: row?.id };
   } catch (err) {
@@ -114,6 +124,15 @@ export async function updateTechnician(id: number, formData: FormData): Promise<
       .where(eq(schema.technicians.id, id));
 
     await setTechnicianCoverage(db(), id, categoryIds, areaIds);
+
+    await audit({
+      action: 'technicians.update',
+      module: 'technicians',
+      targetType: 'technician',
+      targetId: id,
+      targetLabel: fullName,
+      detail: { fullName, phone, baseArea, categoryIds, areaIds },
+    });
   } catch (err) {
     if (isUniqueViolation(err, 'technicians.phone')) {
       return { ok: false, error: 'A technician with that mobile number already exists.' };
@@ -135,6 +154,12 @@ export async function updateTechnician(id: number, formData: FormData): Promise<
 export async function setTechnicianActive(id: number, active: boolean): Promise<ActionResult> {
   await requireManage('technicians');
   await db().update(schema.technicians).set({ active }).where(eq(schema.technicians.id, id));
+  await audit({
+    action: active ? 'technicians.activate' : 'technicians.deactivate',
+    module: 'technicians',
+    targetType: 'technician',
+    targetId: id,
+  });
   revalidatePath('/admin/technicians');
   revalidatePath('/admin/orders');
   return { ok: true };

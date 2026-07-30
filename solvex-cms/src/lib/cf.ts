@@ -1,5 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getDb, type Db } from '@solvex/db';
+import { getAuditDb, getDb, type AuditDb, type Db } from '@solvex/db';
 
 /**
  * Cloudflare bindings for the CMS Worker. Declared here rather than generated
@@ -7,6 +7,8 @@ import { getDb, type Db } from '@solvex/db';
  */
 export type CmsEnv = {
   DB: D1Database;
+  /** The audit log. A separate D1 database, deliberately — see packages/db/src/schema/audit.ts. */
+  AUDIT_DB: D1Database;
   ASSETS_BUCKET: R2Bucket;
   CDN_BASE_URL: string;
   NEXTJS_ENV?: string;
@@ -19,6 +21,17 @@ function env(): CmsEnv {
 /** Drizzle client bound to the shared D1 database. */
 export function db(): Db {
   return getDb(env().DB);
+}
+
+/**
+ * Drizzle client for the audit database.
+ *
+ * Separate from `db()` above and must stay that way: the two bindings look
+ * identical to the type system, so writing the log into the application
+ * database would raise no error anywhere.
+ */
+export function auditDb(): AuditDb {
+  return getAuditDb(env().AUDIT_DB);
 }
 
 /** R2 bucket holding category and service images. */

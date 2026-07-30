@@ -12,7 +12,9 @@ import {
   Layers,
   LayoutGrid,
   LogOut,
+  ScrollText,
   MapPin,
+  LifeBuoy,
   Settings,
   ShoppingCart,
   UserCog,
@@ -30,6 +32,11 @@ type Item = {
   module: string;
   /** Owner-only entries sit outside the permission grid. */
   ownerOnly?: boolean;
+  /**
+   * Wording for the count badge. A bare number beside "Orders" does not say
+   * what it counts, so each item spells out its own meaning for screen readers.
+   */
+  badgeLabel?: (n: number) => string;
 };
 
 /**
@@ -51,7 +58,20 @@ const GROUPS: { heading: string; items: Item[] }[] = [
   {
     heading: 'Operations',
     items: [
-      { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, module: 'orders' },
+      {
+        href: '/admin/orders',
+        label: 'Orders',
+        icon: ShoppingCart,
+        module: 'orders',
+        badgeLabel: (n) => `${n} awaiting approval`,
+      },
+      {
+        href: '/admin/tickets',
+        label: 'Tickets',
+        icon: LifeBuoy,
+        module: 'tickets',
+        badgeLabel: (n) => `${n} needing a reply`,
+      },
       { href: '/admin/technicians', label: 'Technicians', icon: HardHat, module: 'technicians' },
     ],
   },
@@ -82,13 +102,20 @@ const GROUPS: { heading: string; items: Item[] }[] = [
         module: 'settings',
         ownerOnly: true,
       },
+      {
+        href: '/admin/audit',
+        label: 'Activity log',
+        icon: ScrollText,
+        module: 'settings',
+        ownerOnly: true,
+      },
     ],
   },
 ];
 
 export function Sidebar({
   employee,
-  pendingOrders,
+  badges,
 }: {
   employee: {
     name: string;
@@ -96,8 +123,8 @@ export function Sidebar({
     isOwner: boolean;
     permissions: Record<string, string>;
   };
-  /** Orders awaiting approval — the one number worth seeing without navigating. */
-  pendingOrders: number;
+  /** Counts worth seeing without navigating, keyed by href. */
+  badges: Record<string, number>;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -162,9 +189,10 @@ export function Sidebar({
               {group.heading}
             </p>
             <ul className="flex flex-col gap-0.5">
-              {group.items.map(({ href, label, icon: Icon }) => {
+              {group.items.map(({ href, label, icon: Icon, badgeLabel }) => {
                 const active = pathname === href || pathname.startsWith(`${href}/`);
-                const badge = href === '/admin/orders' && pendingOrders > 0 ? pendingOrders : null;
+                const count = badges[href] ?? 0;
+                const badge = badgeLabel && count > 0 ? count : null;
                 return (
                   <li key={href}>
                     <Link
@@ -177,9 +205,7 @@ export function Sidebar({
                       {badge !== null && (
                         <span
                           className="inline-flex min-w-5 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--color-warning)] px-1.5 text-[11px] font-semibold text-white"
-                          // Spelled out for screen readers: a bare number beside
-                          // "Orders" does not say what it counts.
-                          aria-label={`${badge} awaiting approval`}
+                          aria-label={badgeLabel!(badge)}
                         >
                           {badge}
                         </span>

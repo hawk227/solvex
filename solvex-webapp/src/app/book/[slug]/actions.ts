@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { placeOrder } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireCustomer } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 export type BookingResult = { ok: true; code: string } | { ok: false; error: string };
 
@@ -73,8 +74,24 @@ export async function submitBooking(formData: FormData): Promise<BookingResult> 
   });
 
   if (!result.ok) {
+    await audit({
+      action: 'orders.place',
+      targetType: 'service',
+      targetId: serviceId,
+      outcome: 'ERROR',
+      reason: result.reason,
+      detail: { scheduledDate, slotId, requestedCredit: useCredit },
+    });
     return { ok: false, error: MESSAGES[result.reason] ?? 'We could not place that booking.' };
   }
+
+  await audit({
+    action: 'orders.place',
+    targetType: 'order',
+    targetId: result.orderId,
+    targetLabel: result.code,
+    detail: { serviceId, optionIds, scheduledDate, slotId, creditApplied: useCredit },
+  });
 
   revalidatePath('/orders');
   return { ok: true, code: result.code };

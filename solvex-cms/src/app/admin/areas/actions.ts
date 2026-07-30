@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { schema, isUniqueViolation } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -34,6 +35,14 @@ export async function createArea(formData: FormData): Promise<ActionResult> {
     throw err;
   }
 
+  await audit({
+    action: 'settings.area.create',
+    module: 'settings',
+    targetType: 'area',
+    targetLabel: parsed.data.name,
+    detail: parsed.data,
+  });
+
   revalidatePath('/admin/areas');
   return { ok: true };
 }
@@ -58,6 +67,15 @@ export async function updateArea(id: number, formData: FormData): Promise<Action
     throw err;
   }
 
+  await audit({
+    action: 'settings.area.update',
+    module: 'settings',
+    targetType: 'area',
+    targetId: id,
+    targetLabel: parsed.data.name,
+    detail: parsed.data,
+  });
+
   revalidatePath('/admin/areas');
   return { ok: true };
 }
@@ -69,6 +87,12 @@ export async function updateArea(id: number, formData: FormData): Promise<Action
 export async function setAreaActive(id: number, active: boolean): Promise<ActionResult> {
   await requireManage('settings');
   await db().update(schema.areas).set({ active }).where(eq(schema.areas.id, id));
+  await audit({
+    action: active ? 'settings.area.activate' : 'settings.area.deactivate',
+    module: 'settings',
+    targetType: 'area',
+    targetId: id,
+  });
   revalidatePath('/admin/areas');
   return { ok: true };
 }

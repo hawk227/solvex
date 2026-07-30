@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { Check, CircleDashed } from 'lucide-react';
 import { Container, Section } from '@/components/layout/container';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { requireCustomer } from '@/lib/session';
 import {
   getCustomerOrder,
@@ -222,6 +221,14 @@ export default async function OrderPage({ params, searchParams }: PageProps<'/or
               {!cancelled && order.status !== 'COMPLETED' && (
                 <CancelOrder code={order.code} canCancel={order.status === 'PENDING' || order.status === 'APPROVED'} />
               )}
+
+              <p className="text-[var(--web-font-size-small)] text-[var(--color-muted)]">
+                Something not right?{' '}
+                <Link href="/support/new" className="text-[var(--color-primary)] hover:underline">
+                  Tell our support team
+                </Link>
+                .
+              </p>
             </aside>
           </div>
         </Container>

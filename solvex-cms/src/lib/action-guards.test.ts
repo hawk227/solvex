@@ -27,6 +27,14 @@ const EXEMPT: Record<string, string> = {
   'change-password/actions.ts → changeOwnPassword': 'self-service, identity-guarded',
 };
 
+/**
+ * Actions that legitimately write no audit entry.
+ *
+ * Read-only actions only. Anything that changes state belongs in the log, so
+ * this list should stay empty of mutations.
+ */
+const AUDIT_EXEMPT: Record<string, string> = {};
+
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
     const full = path.join(dir, entry);
@@ -84,6 +92,28 @@ describe('server action authorisation', () => {
     }
 
     expect(unguarded).toEqual([]);
+  });
+
+  /**
+   * Every action must also leave an audit trail.
+   *
+   * Same reasoning as the guard check above: an action that writes to the
+   * database without recording who did it produces no error and no visible
+   * symptom, and the gap is only discovered when someone needs the log and it
+   * is not there.
+   */
+  it('audits every exported server action', () => {
+    const silent: string[] = [];
+
+    for (const { file, source } of modules) {
+      for (const action of exportedActions(source)) {
+        const key = `${path.relative(APP, file)} → ${action.name}`;
+        if (key in AUDIT_EXEMPT) continue;
+        if (!/\baudit(As)?\(/.test(action.body)) silent.push(`${key}()`);
+      }
+    }
+
+    expect(silent).toEqual([]);
   });
 
   it('no action still calls the removed requireAdmin helper', () => {

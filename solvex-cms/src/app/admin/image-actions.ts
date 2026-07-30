@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { bucket, db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 import { CONTENT_TYPE, MAX_IMAGE_BYTES, imageKeyFor, validateImage } from '@/lib/upload';
 
 export type UploadResult = { ok: true; key: string } | { ok: false; error: string };
@@ -70,6 +71,14 @@ export async function uploadImage(
     }
   }
 
+  await audit({
+    action: 'catalog.image.upload',
+    module: 'catalog',
+    targetType: target === 'categories' ? 'category' : 'service',
+    targetId: id,
+    detail: { key, kind: validated.kind, bytes: file.size, replaced: current.imageKey ?? null },
+  });
+
   revalidatePath(`/admin/${target}`);
   revalidatePath(`/admin/${target}/${id}`);
   return { ok: true, key };
@@ -93,6 +102,14 @@ export async function removeImage(target: Target, id: number): Promise<UploadRes
   } catch {
     // Row is already cleared; a stranded object is harmless.
   }
+
+  await audit({
+    action: 'catalog.image.remove',
+    module: 'catalog',
+    targetType: target === 'categories' ? 'category' : 'service',
+    targetId: id,
+    detail: { key: current.imageKey },
+  });
 
   revalidatePath(`/admin/${target}`);
   revalidatePath(`/admin/${target}/${id}`);

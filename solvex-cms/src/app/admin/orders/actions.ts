@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { ORDER_STATUSES, payReferralReward, schema } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 import { optionalText } from '@/lib/form';
 import { ALLOWED_NEXT } from './transitions';
 
@@ -42,6 +43,7 @@ export async function updateOrderStatus(formData: FormData): Promise<ActionResul
   const [order] = await d
     .select({
       id: schema.orders.id,
+      code: schema.orders.code,
       status: schema.orders.status,
       userId: schema.orders.userId,
       creditApplied: schema.orders.creditApplied,
@@ -53,6 +55,15 @@ export async function updateOrderStatus(formData: FormData): Promise<ActionResul
   if (!order) return { ok: false, error: 'Order not found.' };
 
   if (!ALLOWED_NEXT[order.status].includes(next)) {
+    await audit({
+      action: 'orders.status.change',
+      module: 'orders',
+      targetType: 'order',
+      targetId: orderId,
+      targetLabel: order.code,
+      outcome: 'DENIED',
+      reason: `${order.status} cannot move to ${next}`,
+    });
     return { ok: false, error: `An order that is ${order.status} cannot move to ${next}.` };
   }
 
@@ -65,8 +76,20 @@ export async function updateOrderStatus(formData: FormData): Promise<ActionResul
     .returning({ id: schema.orders.id });
 
   if (updated.length === 0) {
+    await audit({
+      action: 'orders.status.change',
+      module: 'orders',
+      targetType: 'order',
+      targetId: orderId,
+      targetLabel: order.code,
+      outcome: 'ERROR',
+      reason: 'lost the race to a concurrent update',
+    });
     return { ok: false, error: 'Someone else just changed this order. Refresh and try again.' };
   }
+
+  // Money moved, so it is recorded before anything else can fail.
+  const refunded = next === 'CANCELLED' ? order.creditApplied : 0;
 
   // Cancelling returns any credit the customer spent on this order, as a new
   // ledger row rather than by editing the original debit.
@@ -89,9 +112,11 @@ export async function updateOrderStatus(formData: FormData): Promise<ActionResul
   // Completing the work is what earns a referral reward. payReferralReward is
   // idempotent and enforces "first completed order only" against the database,
   // so calling it here cannot pay twice.
+  let referralPaid = 0;
   if (next === 'COMPLETED') {
     const payout = await payReferralReward(d, orderId);
     if (payout.paid) {
+      referralPaid = payout.amount;
       await d.insert(schema.orderEvents).values({
         orderId,
         status: 'COMPLETED',
@@ -100,6 +125,21 @@ export async function updateOrderStatus(formData: FormData): Promise<ActionResul
       });
     }
   }
+
+  await audit({
+    action: 'orders.status.change',
+    module: 'orders',
+    targetType: 'order',
+    targetId: orderId,
+    targetLabel: order.code,
+    detail: {
+      from: order.status,
+      to: next,
+      note: note || null,
+      creditRefunded: refunded,
+      referralRewardPaid: referralPaid,
+    },
+  });
 
   revalidatePath('/admin/orders');
   revalidatePath('/admin/referrals');

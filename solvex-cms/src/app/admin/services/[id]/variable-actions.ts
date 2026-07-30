@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -35,6 +36,16 @@ export async function addVariableGroup(
   // left to be matched against keys that can never be produced again.
   await d.delete(schema.servicePrices).where(eq(schema.servicePrices.serviceId, serviceId));
 
+  // Note the price wipe: it is a side effect people are surprised by later.
+  await audit({
+    action: 'catalog.variable-group.add',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: serviceId,
+    targetLabel: parsed.data,
+    detail: { pricesCleared: true },
+  });
+
   revalidatePath(`/admin/services/${serviceId}`);
   return { ok: true };
 }
@@ -50,6 +61,14 @@ export async function deleteVariableGroup(
   // in addVariableGroup.
   await d.delete(schema.variableGroups).where(eq(schema.variableGroups.id, groupId));
   await d.delete(schema.servicePrices).where(eq(schema.servicePrices.serviceId, serviceId));
+
+  await audit({
+    action: 'catalog.variable-group.delete',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: serviceId,
+    detail: { groupId, pricesCleared: true },
+  });
 
   revalidatePath(`/admin/services/${serviceId}`);
   return { ok: true };
@@ -77,6 +96,15 @@ export async function addVariableOption(
 
   await d.delete(schema.servicePrices).where(eq(schema.servicePrices.serviceId, serviceId));
 
+  await audit({
+    action: 'catalog.variable-option.add',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: serviceId,
+    targetLabel: parsed.data,
+    detail: { groupId, pricesCleared: true },
+  });
+
   revalidatePath(`/admin/services/${serviceId}`);
   return { ok: true };
 }
@@ -90,6 +118,14 @@ export async function deleteVariableOption(
   const d = db();
   await d.delete(schema.variableOptions).where(eq(schema.variableOptions.id, optionId));
   await d.delete(schema.servicePrices).where(eq(schema.servicePrices.serviceId, serviceId));
+
+  await audit({
+    action: 'catalog.variable-option.delete',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: serviceId,
+    detail: { optionId, pricesCleared: true },
+  });
 
   revalidatePath(`/admin/services/${serviceId}`);
   return { ok: true };

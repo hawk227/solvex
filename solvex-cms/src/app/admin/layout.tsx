@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { eq, sql } from 'drizzle-orm';
-import { can, schema } from '@solvex/db';
+import { can, countOpenTickets, schema } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { getCurrentEmployee } from '@/lib/session';
 import { Sidebar } from '@/components/layout/sidebar';
@@ -25,20 +25,25 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!employee) redirect('/login');
   if (employee.mustChangePassword) redirect('/change-password');
 
-  // Only counted for employees who can actually open the orders list — showing a
-  // badge for a page they cannot reach would be noise.
-  let pendingOrders = 0;
+  // Only counted for employees who can actually open the page — a badge for a
+  // page they cannot reach would be noise.
+  const badges: Record<string, number> = {};
+
   if (can(employee, 'orders', 'view')) {
     const [row] = await db()
       .select({ n: sql<number>`count(*)` })
       .from(schema.orders)
       .where(eq(schema.orders.status, 'PENDING'));
-    pendingOrders = Number(row?.n ?? 0);
+    badges['/admin/orders'] = Number(row?.n ?? 0);
+  }
+
+  if (can(employee, 'tickets', 'view')) {
+    badges['/admin/tickets'] = await countOpenTickets(db());
   }
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar employee={employee} pendingOrders={pendingOrders} />
+      <Sidebar employee={employee} badges={badges} />
       <div className="flex min-w-0 flex-1 flex-col">{children}</div>
     </div>
   );

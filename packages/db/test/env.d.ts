@@ -9,6 +9,9 @@ declare global {
     interface Env {
       DB: D1Database;
       TEST_MIGRATIONS: D1Migration[];
+      /** The audit log: a separate database with its own migration lineage. */
+      AUDIT_DB: D1Database;
+      TEST_AUDIT_MIGRATIONS: D1Migration[];
     }
   }
 }

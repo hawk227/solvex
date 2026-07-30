@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { schema, slugify, isUniqueViolation } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 import { optionalText } from '@/lib/form';
 
 export type ActionResult = { ok: true; id?: number } | { ok: false; error: string };
@@ -51,6 +52,15 @@ export async function createCategory(formData: FormData): Promise<ActionResult> 
     throw err;
   }
 
+  await audit({
+    action: 'catalog.category.create',
+    module: 'catalog',
+    targetType: 'category',
+    targetId: id,
+    targetLabel: name,
+    detail: { slug, sort, hasDescription: Boolean(description) },
+  });
+
   revalidatePath('/admin/categories');
   return { ok: true, id };
 }
@@ -76,6 +86,15 @@ export async function updateCategory(id: number, formData: FormData): Promise<Ac
     .set({ name, description: description || null, sort })
     .where(eq(schema.categories.id, id));
 
+  await audit({
+    action: 'catalog.category.update',
+    module: 'catalog',
+    targetType: 'category',
+    targetId: id,
+    targetLabel: name,
+    detail: { sort, hasDescription: Boolean(description) },
+  });
+
   revalidatePath('/admin/categories');
   return { ok: true };
 }
@@ -84,6 +103,13 @@ export async function setCategoryActive(id: number, active: boolean): Promise<Ac
   await requireManage('catalog');
 
   await db().update(schema.categories).set({ active }).where(eq(schema.categories.id, id));
+
+  await audit({
+    action: active ? 'catalog.category.activate' : 'catalog.category.deactivate',
+    module: 'catalog',
+    targetType: 'category',
+    targetId: id,
+  });
 
   revalidatePath('/admin/categories');
   revalidatePath('/admin/services');

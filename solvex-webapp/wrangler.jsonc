@@ -14,6 +14,12 @@
       "database_name": "solvex-db",
       "database_id": "6ed04555-bec5-422c-a77d-c1c649159678",
       "migrations_dir": "../packages/db/migrations"
+    },
+    {
+      "binding": "AUDIT_DB",
+      "database_name": "solvex-audit",
+      "database_id": "56c40b68-a47c-4897-b2ba-df816da7fd00",
+      "migrations_dir": "../packages/db/migrations-audit"
     }
   ],
   "vars": {

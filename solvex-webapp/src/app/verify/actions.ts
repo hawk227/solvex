@@ -3,6 +3,7 @@
 import { recordReferral } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireCustomer } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 /**
  * Record who referred the signed-in customer, after their email is verified.
@@ -15,5 +16,14 @@ import { requireCustomer } from '@/lib/session';
 export async function attachReferral(code: string): Promise<{ ok: boolean }> {
   const customer = await requireCustomer();
   const result = await recordReferral(db(), code, customer.id);
+
+  await audit({
+    action: 'referral.attach',
+    targetType: 'customer',
+    targetId: customer.id,
+    outcome: result.ok ? 'OK' : 'DENIED',
+    reason: result.ok ? null : 'code not eligible',
+  });
+
   return { ok: result.ok };
 }

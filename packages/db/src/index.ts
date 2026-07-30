@@ -28,3 +28,6 @@ export * from "./referral-payout";
 export * from "./analytics";
 export * from "./technicians";
 export * from "./permissions";
+export * from "./tickets";
+// Separate database, separate binding — see src/audit.ts.
+export * from "./audit";

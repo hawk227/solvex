@@ -35,6 +35,7 @@ export const PRESETS: Record<string, PermissionGrid> = {
   Owner: fullGrid(),
   Manager: {
     orders: 'manage',
+    tickets: 'manage',
     catalog: 'manage',
     technicians: 'manage',
     customers: 'view',
@@ -44,6 +45,7 @@ export const PRESETS: Record<string, PermissionGrid> = {
   },
   Dispatcher: {
     orders: 'manage',
+    tickets: 'manage',
     catalog: 'view',
     technicians: 'view',
     customers: 'view',
@@ -53,6 +55,8 @@ export const PRESETS: Record<string, PermissionGrid> = {
   },
   Support: {
     orders: 'view',
+    // Answering customers is the whole job.
+    tickets: 'manage',
     catalog: 'view',
     technicians: 'none',
     customers: 'view',
@@ -62,6 +66,7 @@ export const PRESETS: Record<string, PermissionGrid> = {
   },
   'Catalog editor': {
     orders: 'none',
+    tickets: 'none',
     catalog: 'manage',
     technicians: 'none',
     customers: 'none',

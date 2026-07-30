@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { schema, slugify, isUniqueViolation, parseList, parseFaqs, parseProse } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 import { optionalInt, optionalText } from '@/lib/form';
 
 export type ActionResult = { ok: true; id?: number } | { ok: false; error: string };
@@ -53,6 +54,15 @@ export async function createService(formData: FormData): Promise<ActionResult> {
       })
       .returning({ id: schema.services.id });
 
+    await audit({
+      action: 'catalog.service.create',
+      module: 'catalog',
+      targetType: 'service',
+      targetId: row?.id,
+      targetLabel: name,
+      detail: { slug, categoryId, durationMin, sort },
+    });
+
     revalidatePath('/admin/services');
     revalidatePath('/admin/categories');
     return { ok: true, id: row?.id };
@@ -85,6 +95,15 @@ export async function updateServiceBasics(id: number, formData: FormData): Promi
       sort,
     })
     .where(eq(schema.services.id, id));
+
+  await audit({
+    action: 'catalog.service.update',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: id,
+    targetLabel: name,
+    detail: { categoryId, durationMin, sort },
+  });
 
   revalidatePath('/admin/services');
   revalidatePath(`/admin/services/${id}`);
@@ -125,6 +144,21 @@ export async function updateServiceContent(id: number, formData: FormData): Prom
     })
     .where(eq(schema.services.id, id));
 
+  // Sizes rather than the prose itself: the log says the copy changed and by
+  // how much, without becoming a second copy of the content.
+  await audit({
+    action: 'catalog.service.content.update',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: id,
+    detail: {
+      aboutLength: parsed.data.aboutMd?.length ?? 0,
+      includedCount: included.length,
+      notIncludedCount: notIncluded.length,
+      faqCount: faqs.length,
+    },
+  });
+
   revalidatePath(`/admin/services/${id}`);
   return { ok: true };
 }
@@ -132,6 +166,12 @@ export async function updateServiceContent(id: number, formData: FormData): Prom
 export async function setServiceActive(id: number, active: boolean): Promise<ActionResult> {
   await requireManage('catalog');
   await db().update(schema.services).set({ active }).where(eq(schema.services.id, id));
+  await audit({
+    action: active ? 'catalog.service.activate' : 'catalog.service.deactivate',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: id,
+  });
   revalidatePath('/admin/services');
   return { ok: true };
 }

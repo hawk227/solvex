@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { getDb, schema } from '../src/index';
 import {
+  PERMISSION_MODULES,
   PRESETS,
   TEMP_PASSWORD_TTL_MS,
   can,
@@ -69,7 +70,7 @@ describe('getEmployee', () => {
 
     expect(can(owner, 'settings', 'manage')).toBe(true);
     expect(can(owner, 'orders', 'manage')).toBe(true);
-    expect(visibleModules(owner)).toHaveLength(7);
+    expect(visibleModules(owner)).toHaveLength(PERMISSION_MODULES.length);
   });
 
   it('grants nothing to a deactivated employee, whatever the grid says', async () => {

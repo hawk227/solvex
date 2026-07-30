@@ -5,6 +5,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireCustomer } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 export type CancelResult = { ok: true } | { ok: false; error: string };
 
@@ -60,6 +61,14 @@ export async function cancelOrder(code: string): Promise<CancelResult> {
     .returning({ id: schema.orders.id });
 
   if (updated.length === 0) {
+    await audit({
+      action: 'orders.cancel',
+      targetType: 'order',
+      targetId: order.id,
+      targetLabel: code,
+      outcome: 'ERROR',
+      reason: 'lost the race to a concurrent update',
+    });
     return { ok: false, error: 'This booking has just moved on. Please refresh and call us.' };
   }
 
@@ -76,6 +85,14 @@ export async function cancelOrder(code: string): Promise<CancelResult> {
     orderId: order.id,
     status: 'CANCELLED',
     note: 'Cancelled by customer',
+  });
+
+  await audit({
+    action: 'orders.cancel',
+    targetType: 'order',
+    targetId: order.id,
+    targetLabel: code,
+    detail: { from: order.status, creditRefunded: order.creditApplied },
   });
 
   revalidatePath('/orders');

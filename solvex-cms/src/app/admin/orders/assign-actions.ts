@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { assignTechnician } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 export type AssignActionResult = { ok: true } | { ok: false; error: string };
 
@@ -22,8 +23,25 @@ export async function assignOrderTechnician(
 
   const result = await assignTechnician(db(), orderId, technicianId, admin.id);
   if (!result.ok) {
+    await audit({
+      action: 'orders.technician.assign',
+      module: 'orders',
+      targetType: 'order',
+      targetId: orderId,
+      outcome: 'ERROR',
+      reason: result.reason,
+      detail: { technicianId },
+    });
     return { ok: false, error: MESSAGES[result.reason] ?? 'Could not assign that technician.' };
   }
+
+  await audit({
+    action: technicianId === null ? 'orders.technician.unassign' : 'orders.technician.assign',
+    module: 'orders',
+    targetType: 'order',
+    targetId: orderId,
+    detail: { technicianId },
+  });
 
   revalidatePath('/admin/orders');
   revalidatePath('/admin/technicians');

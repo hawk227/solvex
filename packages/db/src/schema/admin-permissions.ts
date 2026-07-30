@@ -5,6 +5,7 @@ import { adminUser } from './admin-auth';
 /** Back-office areas access is granted over. */
 export const PERMISSION_MODULES = [
   'orders',
+  'tickets',
   'catalog',
   'technicians',
   'customers',

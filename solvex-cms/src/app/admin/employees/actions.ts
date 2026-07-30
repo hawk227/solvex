@@ -17,6 +17,7 @@ import {
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/cf';
 import { requireOwner } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -37,12 +38,14 @@ const NewEmployee = z.object({
 
 function gridFromForm(formData: FormData): PermissionGrid {
   const grid = {} as PermissionGrid;
-  for (const module of PERMISSION_MODULES) {
-    const raw = String(formData.get(`perm:${module}`) ?? 'none');
+  // Named `mod`, not `module`: the latter shadows the CommonJS global and the
+  // bundler can rewrite it.
+  for (const mod of PERMISSION_MODULES) {
+    const raw = String(formData.get(`perm:${mod}`) ?? 'none');
     const level = (PERMISSION_LEVELS as readonly string[]).includes(raw)
       ? (raw as PermissionLevel)
       : 'none';
-    grid[module] = level;
+    grid[mod] = level;
   }
   return grid;
 }
@@ -88,8 +91,20 @@ export async function createEmployee(formData: FormData): Promise<ActionResult> 
     })
     .where(eq(schema.adminUser.id, userId));
 
-  const result = await setPermissions(db(), actor, userId, gridFromForm(formData));
+  const grid = gridFromForm(formData);
+  const result = await setPermissions(db(), actor, userId, grid);
   if (!result.ok) return { ok: false, error: REASONS[result.reason] ?? 'Could not set access.' };
+
+  // Note what access was granted, never the temporary password that came with
+  // it. `redact` would strip it regardless; it is simply not passed.
+  await audit({
+    action: 'employees.create',
+    module: 'settings',
+    targetType: 'employee',
+    targetId: userId,
+    targetLabel: email,
+    detail: { name, email, permissions: grid },
+  });
 
   revalidatePath('/admin/employees');
   return { ok: true, id: userId };
@@ -103,13 +118,32 @@ export async function updateEmployeeAccess(
 
   const wantsOwner = formData.get('isOwner') === 'on';
   const owner = await setOwner(db(), actor, subjectId, wantsOwner);
-  if (!owner.ok) return { ok: false, error: REASONS[owner.reason] ?? 'Could not change role.' };
+  if (!owner.ok) {
+    await audit({
+      action: 'employees.access.update',
+      module: 'settings',
+      targetType: 'employee',
+      targetId: subjectId,
+      outcome: 'DENIED',
+      reason: owner.reason,
+    });
+    return { ok: false, error: REASONS[owner.reason] ?? 'Could not change role.' };
+  }
 
   // Owners hold everything implicitly, so the grid is only meaningful for staff.
-  if (!wantsOwner) {
-    const perms = await setPermissions(db(), actor, subjectId, gridFromForm(formData));
+  const grid = wantsOwner ? null : gridFromForm(formData);
+  if (grid) {
+    const perms = await setPermissions(db(), actor, subjectId, grid);
     if (!perms.ok) return { ok: false, error: REASONS[perms.reason] ?? 'Could not set access.' };
   }
+
+  await audit({
+    action: 'employees.access.update',
+    module: 'settings',
+    targetType: 'employee',
+    targetId: subjectId,
+    detail: { isOwner: wantsOwner, permissions: grid },
+  });
 
   revalidatePath('/admin/employees');
   revalidatePath(`/admin/employees/${subjectId}`);
@@ -122,7 +156,24 @@ export async function toggleEmployeeActive(
 ): Promise<ActionResult> {
   const actor = await requireOwner();
   const result = await setEmployeeActive(db(), actor, subjectId, active);
-  if (!result.ok) return { ok: false, error: REASONS[result.reason] ?? 'Could not update.' };
+  if (!result.ok) {
+    await audit({
+      action: 'employees.active.set',
+      module: 'settings',
+      targetType: 'employee',
+      targetId: subjectId,
+      outcome: 'DENIED',
+      reason: result.reason,
+    });
+    return { ok: false, error: REASONS[result.reason] ?? 'Could not update.' };
+  }
+
+  await audit({
+    action: active ? 'employees.activate' : 'employees.deactivate',
+    module: 'settings',
+    targetType: 'employee',
+    targetId: subjectId,
+  });
 
   revalidatePath('/admin/employees');
   return { ok: true };
@@ -155,6 +206,14 @@ export async function resetEmployeePassword(
     actorId: actor.id,
     action: 'password.reset',
     subjectId,
+  });
+
+  // The fact of the reset, never the credential itself.
+  await audit({
+    action: 'employees.password.reset',
+    module: 'settings',
+    targetType: 'employee',
+    targetId: subjectId,
   });
 
   revalidatePath('/admin/employees');

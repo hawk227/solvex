@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -39,6 +40,15 @@ export async function saveSettings(formData: FormData): Promise<ActionResult> {
       .values({ key, value: String(value) })
       .onConflictDoUpdate({ target: schema.settings.key, set: { value: String(value) } });
   }
+
+  // The values themselves are the point here — a changed referral reward or
+  // slot capacity is exactly what someone will later want explained.
+  await audit({
+    action: 'settings.update',
+    module: 'settings',
+    targetType: 'settings',
+    detail: parsed.data,
+  });
 
   revalidatePath('/admin/settings');
   revalidatePath('/admin/slots');

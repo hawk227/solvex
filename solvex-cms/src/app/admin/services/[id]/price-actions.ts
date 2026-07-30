@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { schema, expandCombinations } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 export type ActionResult = { ok: true; written?: number } | { ok: false; error: string };
 
@@ -63,6 +64,15 @@ export async function setPrice(
       set: { price: parsed.data },
     });
 
+  await audit({
+    action: 'catalog.price.set',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: serviceId,
+    targetLabel: comboKey || 'base price',
+    detail: { comboKey, price: parsed.data },
+  });
+
   revalidatePath(`/admin/services/${serviceId}`);
   return { ok: true, written: 1 };
 }
@@ -116,6 +126,14 @@ export async function bulkFillPrices(
       });
   }
 
+  await audit({
+    action: 'catalog.price.bulk-fill',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: serviceId,
+    detail: { price, onlyEmpty, written: targets.length },
+  });
+
   revalidatePath(`/admin/services/${serviceId}`);
   return { ok: true, written: targets.length };
 }
@@ -132,6 +150,15 @@ export async function clearPrice(serviceId: number, comboKey: string): Promise<A
         eq(schema.servicePrices.comboKey, comboKey),
       ),
     );
+
+  await audit({
+    action: 'catalog.price.clear',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: serviceId,
+    targetLabel: comboKey || 'base price',
+    detail: { comboKey },
+  });
 
   revalidatePath(`/admin/services/${serviceId}`);
   return { ok: true };

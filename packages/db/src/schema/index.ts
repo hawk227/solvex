@@ -8,3 +8,4 @@ export * from './admin-auth';
 export * from './admin-permissions';
 export * from './customer-auth';
 export * from './technicians';
+export * from './tickets';

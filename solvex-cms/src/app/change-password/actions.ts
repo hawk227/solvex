@@ -6,6 +6,7 @@ import { schema } from '@solvex/db';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/cf';
 import { getCurrentEmployee } from '@/lib/session';
+import { auditAs } from '@/lib/audit';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -51,7 +52,15 @@ export async function changeOwnPassword(formData: FormData): Promise<ActionResul
     password: parsed.data.currentPassword,
     hash: credential.password,
   });
-  if (!valid) return { ok: false, error: 'Current password is incorrect.' };
+  if (!valid) {
+    // A run of these against one account is the signal worth having.
+    await auditAs(employee, {
+      action: 'auth.password.change',
+      outcome: 'DENIED',
+      reason: 'current password incorrect',
+    });
+    return { ok: false, error: 'Current password is incorrect.' };
+  }
 
   await ctx.internalAdapter.updatePassword(
     employee.id,
@@ -67,6 +76,12 @@ export async function changeOwnPassword(formData: FormData): Promise<ActionResul
     actorId: employee.id,
     action: 'password.changed',
     subjectId: employee.id,
+  });
+
+  await auditAs(employee, {
+    action: 'auth.password.change',
+    targetType: 'employee',
+    targetId: employee.id,
   });
 
   return { ok: true };

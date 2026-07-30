@@ -3,9 +3,9 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { nextCookies } from 'better-auth/next-js';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { eq } from 'drizzle-orm';
-import { APIError } from 'better-auth/api';
-import { isTempPasswordExpired, schema } from '@solvex/db';
-import { db } from './cf';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
+import { isTempPasswordExpired, recordAudit, schema } from '@solvex/db';
+import { auditDb, db } from './cf';
 
 /**
  * Admin authentication for the CMS.
@@ -102,6 +102,42 @@ export function auth() {
         },
       },
     },
+    /**
+     * Sign-in and sign-out are logged here, not in a server action.
+     *
+     * Better Auth serves these as its own routes, called straight from the
+     * login form, so nothing of ours runs on that path — a failed password is
+     * invisible to the rest of the codebase. This middleware is the only place
+     * that sees the attempt and its outcome.
+     */
+    hooks: {
+      after: createAuthMiddleware(async (ctx) => {
+        const path = ctx.path;
+        if (path !== '/sign-in/email' && path !== '/sign-out') return;
+
+        const head = ctx.headers;
+        const body = ctx.body as { email?: string } | undefined;
+        // The session is set only once sign-in has actually succeeded.
+        const session = ctx.context.newSession;
+        const succeeded = path === '/sign-out' ? true : Boolean(session);
+
+        await recordAudit(auditDb(), {
+          app: 'CMS',
+          actorType: session?.user ? 'EMPLOYEE' : 'ANON',
+          actorId: session?.user?.id ?? null,
+          actorName: session?.user?.name ?? null,
+          // On a failure the typed email is the only identifier there is, and
+          // it is the thing worth having: it shows which account was targeted.
+          actorEmail: session?.user?.email ?? body?.email ?? null,
+          action: path === '/sign-out' ? 'auth.logout' : 'auth.login',
+          outcome: succeeded ? 'OK' : 'DENIED',
+          reason: succeeded ? null : 'sign-in rejected',
+          ip: head?.get('cf-connecting-ip') ?? head?.get('x-forwarded-for') ?? null,
+          userAgent: head?.get('user-agent') ?? null,
+        });
+      }),
+    },
+
     plugins: [nextCookies()],
   });
 }

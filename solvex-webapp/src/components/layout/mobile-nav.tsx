@@ -59,6 +59,11 @@ export function MobileNav({ links }: { links: readonly { href: string; label: st
                   </Link>
                 </Button>
                 <Button asChild variant="outline">
+                  <Link href="/support" onClick={() => setOpen(false)}>
+                    Support
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
                   <Link href="/account" onClick={() => setOpen(false)}>
                     Your account
                   </Link>

@@ -3,13 +3,14 @@ import { notFound, redirect } from 'next/navigation';
 import {
   can,
   getEmployee,
+  recordAudit,
   visibleModules,
   type Employee,
   type PermissionLevel,
   type PermissionModule,
 } from '@solvex/db';
 import { auth } from './auth';
-import { db } from './cf';
+import { auditDb, db } from './cf';
 
 export type { Employee, PermissionModule, PermissionLevel };
 
@@ -44,12 +45,44 @@ async function requireSignedIn(): Promise<Employee> {
 }
 
 /**
+ * Record a refused attempt.
+ *
+ * Lives in the guards rather than at the call sites, so a denial is logged by
+ * construction: there is no way to add an action that checks permission and
+ * forgets to record the refusal, because the check itself does the recording.
+ */
+async function auditDenial(
+  employee: Employee,
+  module: PermissionModule | null,
+  action: string,
+  reason: string,
+): Promise<void> {
+  const head = await headers();
+  await recordAudit(auditDb(), {
+    app: 'CMS',
+    actorType: 'EMPLOYEE',
+    actorId: employee.id,
+    actorName: employee.name,
+    actorEmail: employee.email,
+    action,
+    module,
+    outcome: 'DENIED',
+    reason,
+    ip: head.get('cf-connecting-ip') ?? head.get('x-forwarded-for'),
+    userAgent: head.get('user-agent'),
+  });
+}
+
+/**
  * Page guard. Uses notFound rather than a redirect on purpose — a module the
  * employee cannot see should not announce that it exists.
  */
 export async function requireView(module: PermissionModule): Promise<Employee> {
   const employee = await requireSignedIn();
-  if (!can(employee, module, 'view')) notFound();
+  if (!can(employee, module, 'view')) {
+    await auditDenial(employee, module, `${module}.view`, 'no view access');
+    notFound();
+  }
   return employee;
 }
 
@@ -60,6 +93,7 @@ export async function requireView(module: PermissionModule): Promise<Employee> {
 export async function requireManage(module: PermissionModule): Promise<Employee> {
   const employee = await requireSignedIn();
   if (!can(employee, module, 'manage')) {
+    await auditDenial(employee, module, `${module}.manage`, 'no manage access');
     throw new Error(`Forbidden: ${module} requires manage access.`);
   }
   return employee;
@@ -68,7 +102,10 @@ export async function requireManage(module: PermissionModule): Promise<Employee>
 /** Employee administration. Owners only, by design. */
 export async function requireOwner(): Promise<Employee> {
   const employee = await requireSignedIn();
-  if (!employee.isOwner) notFound();
+  if (!employee.isOwner) {
+    await auditDenial(employee, null, 'owner.access', 'not an owner');
+    notFound();
+  }
   return employee;
 }
 

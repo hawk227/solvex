@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { schema, isUniqueViolation } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
+import { audit } from '@/lib/audit';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -50,6 +51,14 @@ export async function createSlot(formData: FormData): Promise<ActionResult> {
     throw err;
   }
 
+  await audit({
+    action: 'settings.slot.create',
+    module: 'settings',
+    targetType: 'slot',
+    targetLabel: parsed.data.label,
+    detail: parsed.data,
+  });
+
   revalidatePath('/admin/slots');
   return { ok: true };
 }
@@ -70,6 +79,15 @@ export async function updateSlot(id: number, formData: FormData): Promise<Action
     throw err;
   }
 
+  await audit({
+    action: 'settings.slot.update',
+    module: 'settings',
+    targetType: 'slot',
+    targetId: id,
+    targetLabel: parsed.data.label,
+    detail: parsed.data,
+  });
+
   revalidatePath('/admin/slots');
   return { ok: true };
 }
@@ -77,6 +95,12 @@ export async function updateSlot(id: number, formData: FormData): Promise<Action
 export async function setSlotActive(id: number, active: boolean): Promise<ActionResult> {
   await requireManage('settings');
   await db().update(schema.slotTemplates).set({ active }).where(eq(schema.slotTemplates.id, id));
+  await audit({
+    action: active ? 'settings.slot.activate' : 'settings.slot.deactivate',
+    module: 'settings',
+    targetType: 'slot',
+    targetId: id,
+  });
   revalidatePath('/admin/slots');
   return { ok: true };
 }
@@ -114,6 +138,15 @@ export async function setCapacityOverride(formData: FormData): Promise<ActionRes
       set: { capacity },
     });
 
+  await audit({
+    action: 'settings.capacity.override',
+    module: 'settings',
+    targetType: 'slot',
+    targetId: slotId,
+    targetLabel: date,
+    detail: { date, capacity },
+  });
+
   revalidatePath('/admin/slots');
   return { ok: true };
 }
@@ -124,6 +157,15 @@ export async function clearCapacityOverride(date: string, slotId: number): Promi
   await db()
     .delete(schema.slotCapacity)
     .where(and(eq(schema.slotCapacity.date, date), eq(schema.slotCapacity.slotId, slotId)));
+
+  await audit({
+    action: 'settings.capacity.clear',
+    module: 'settings',
+    targetType: 'slot',
+    targetId: slotId,
+    targetLabel: date,
+    detail: { date },
+  });
 
   revalidatePath('/admin/slots');
   return { ok: true };

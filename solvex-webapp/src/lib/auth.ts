@@ -3,8 +3,9 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { nextCookies } from 'better-auth/next-js';
 import { emailOTP } from 'better-auth/plugins';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { schema } from '@solvex/db';
-import { db } from './cf';
+import { createAuthMiddleware } from 'better-auth/api';
+import { recordAudit, schema } from '@solvex/db';
+import { auditDb, db } from './cf';
 import { otpEmail, passwordResetEmail, sendEmail } from './email';
 
 /**
@@ -60,6 +61,51 @@ export function auth() {
     advanced: {
       cookiePrefix: 'solvex',
     },
+    /**
+     * Customer sign-in, sign-up, sign-out and OTP verification.
+     *
+     * These are Better Auth's own routes, called from the client, so no server
+     * action of ours runs on them — this middleware is the only thing that sees
+     * a failed password or a wrong OTP.
+     */
+    hooks: {
+      after: createAuthMiddleware(async (ctx) => {
+        const ACTIONS: Record<string, string> = {
+          '/sign-in/email': 'auth.login',
+          '/sign-up/email': 'auth.signup',
+          '/sign-out': 'auth.logout',
+          '/email-otp/verify-email': 'auth.otp.verify',
+          '/forget-password': 'auth.password.reset-request',
+          '/reset-password': 'auth.password.reset',
+        };
+        const action = ACTIONS[ctx.path];
+        if (!action) return;
+
+        const head = ctx.headers;
+        const body = ctx.body as { email?: string } | undefined;
+        const session = ctx.context.newSession;
+        // Sign-out and the password-reset request succeed without a session;
+        // the rest establish one only on success.
+        const sessionless = ctx.path === '/sign-out' || ctx.path === '/forget-password';
+        const succeeded = sessionless || Boolean(session);
+
+        await recordAudit(auditDb(), {
+          app: 'WEB',
+          actorType: session?.user ? 'CUSTOMER' : 'ANON',
+          actorId: session?.user?.id ?? null,
+          actorName: session?.user?.name ?? null,
+          // On a failure the submitted email is the only identifier available,
+          // and it shows which account was being targeted.
+          actorEmail: session?.user?.email ?? body?.email ?? null,
+          action,
+          outcome: succeeded ? 'OK' : 'DENIED',
+          reason: succeeded ? null : 'rejected',
+          ip: head?.get('cf-connecting-ip') ?? head?.get('x-forwarded-for') ?? null,
+          userAgent: head?.get('user-agent') ?? null,
+        });
+      }),
+    },
+
     plugins: [
       emailOTP({
         otpLength: 6,
