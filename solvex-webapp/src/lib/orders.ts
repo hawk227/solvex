@@ -14,6 +14,8 @@ export type CustomerOrder = {
   total: number;
   status: OrderStatus;
   notes: string | null;
+  technicianName: string | null;
+  technicianPhone: string | null;
   nameSnapshot: string;
   phoneSnapshot: string;
   addressSnapshot: string;
@@ -37,18 +39,37 @@ function selection() {
     phoneSnapshot: schema.orders.phoneSnapshot,
     addressSnapshot: schema.orders.addressSnapshot,
     createdAt: schema.orders.createdAt,
+    technicianName: schema.technicians.fullName,
+    technicianPhone: schema.technicians.phone,
   };
 }
 
+/**
+ * Withhold the technician's mobile until they are actually on their way.
+ *
+ * Done here, not in the component. Rendering it conditionally still ships the
+ * number in the RSC payload, where it is readable in page source — a technician's
+ * personal number must not leave the server before the customer needs it.
+ */
+function redactTechnicianPhone<T extends { status: OrderStatus; technicianPhone: string | null }>(
+  order: T,
+): T {
+  const reachable = order.status === 'ON_THE_WAY' || order.status === 'IN_PROGRESS';
+  return reachable ? order : { ...order, technicianPhone: null };
+}
+
 export async function listCustomerOrders(userId: string): Promise<CustomerOrder[]> {
-  return db()
+  const rows = await db()
     .select(selection())
     .from(schema.orders)
     .innerJoin(schema.services, eq(schema.services.id, schema.orders.serviceId))
     .innerJoin(schema.categories, eq(schema.categories.id, schema.services.categoryId))
     .innerJoin(schema.slotTemplates, eq(schema.slotTemplates.id, schema.orders.slotId))
+    .leftJoin(schema.technicians, eq(schema.technicians.id, schema.orders.technicianId))
     .where(eq(schema.orders.userId, userId))
     .orderBy(desc(schema.orders.createdAt));
+
+  return rows.map(redactTechnicianPhone);
 }
 
 /**
@@ -68,10 +89,11 @@ export async function getCustomerOrder(
     .innerJoin(schema.services, eq(schema.services.id, schema.orders.serviceId))
     .innerJoin(schema.categories, eq(schema.categories.id, schema.services.categoryId))
     .innerJoin(schema.slotTemplates, eq(schema.slotTemplates.id, schema.orders.slotId))
+    .leftJoin(schema.technicians, eq(schema.technicians.id, schema.orders.technicianId))
     .where(and(eq(schema.orders.code, code), eq(schema.orders.userId, userId)))
     .limit(1);
 
-  return row ?? null;
+  return row ? redactTechnicianPhone(row) : null;
 }
 
 export async function getOrderEvents(orderId: number) {

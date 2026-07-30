@@ -3,6 +3,7 @@ import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { areas } from './customer';
 import { services } from './catalog';
 import { slotTemplates } from './scheduling';
+import { technicians } from './technicians';
 
 export const ORDER_STATUSES = [
   'PENDING',
@@ -43,6 +44,23 @@ export const orders = sqliteTable(
     phoneSnapshot: text('phone_snapshot').notNull(),
     addressSnapshot: text('address_snapshot').notNull(),
     notes: text('notes'),
+    /**
+     * Assigned technician. Nullable — an order exists before anyone is dispatched.
+     *
+     * CAVEAT: SQLite's ALTER TABLE ADD COLUMN cannot carry an ON DELETE action,
+     * so although this declares `set null`, the live constraint is NO ACTION.
+     * The effect is RESTRICT-like — a technician who has ever been assigned to an
+     * order cannot be deleted. That is the behaviour we want and it is covered by
+     * a test, so the declaration is kept only to match drizzle's snapshot;
+     * "correcting" it triggers a full rebuild of `orders`, which several tables
+     * reference.
+     *
+     * Take someone off the rota with `active = false`. Deleting a technician
+     * would erase who attended past jobs.
+     */
+    technicianId: integer('technician_id').references(() => technicians.id, {
+      onDelete: 'set null',
+    }),
     status: text('status').notNull().$type<OrderStatus>().default('PENDING'),
     createdAt: integer('created_at', { mode: 'timestamp_ms' })
       .notNull()
@@ -76,6 +94,10 @@ export const orderEvents = sqliteTable(
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
   service: one(services, { fields: [orders.serviceId], references: [services.id] }),
+  technician: one(technicians, {
+    fields: [orders.technicianId],
+    references: [technicians.id],
+  }),
   slot: one(slotTemplates, { fields: [orders.slotId], references: [slotTemplates.id] }),
   area: one(areas, { fields: [orders.areaId], references: [areas.id] }),
   events: many(orderEvents),

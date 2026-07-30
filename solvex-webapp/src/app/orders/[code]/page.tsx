@@ -171,6 +171,32 @@ export default async function OrderPage({ params, searchParams }: PageProps<'/or
                 </dl>
               </section>
 
+              {order.technicianName && !cancelled && (
+                <section className="rounded-[var(--web-card-radius)] border border-[var(--color-border)] p-6">
+                  <h2 className="font-bold text-[var(--color-text)]">Your technician</h2>
+                  <p className="mt-3 font-medium">{order.technicianName}</p>
+                  {/*
+                    The number appears only once they are actually on the way or
+                    working. Before that there is nothing to call about, and a
+                    technician's personal mobile should not be handed out earlier
+                    than it is needed.
+                  */}
+                  {order.technicianPhone &&
+                  (order.status === 'ON_THE_WAY' || order.status === 'IN_PROGRESS') ? (
+                    <a
+                      href={`tel:${order.technicianPhone}`}
+                      className="mt-1 inline-block text-[var(--web-font-size-small)] text-[var(--color-primary)] hover:underline"
+                    >
+                      {order.technicianPhone}
+                    </a>
+                  ) : (
+                    <p className="mt-1 text-[var(--web-font-size-small)] text-[var(--color-muted)]">
+                      Their number appears here once they set off.
+                    </p>
+                  )}
+                </section>
+              )}
+
               <section className="rounded-[var(--web-card-radius)] border border-[var(--color-border)] p-6">
                 <h2 className="font-bold text-[var(--color-text)]">Payment</h2>
                 <dl className="mt-4 flex flex-col gap-2 text-[var(--web-font-size-small)]">

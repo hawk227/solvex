@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  HardHat,
   LayoutGrid,
   Layers,
   Wrench,
@@ -24,6 +25,7 @@ const NAV = [
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/admin/categories', label: 'Categories', icon: Layers },
   { href: '/admin/services', label: 'Services', icon: Wrench },
+  { href: '/admin/technicians', label: 'Technicians', icon: HardHat },
   { href: '/admin/customers', label: 'Customers', icon: Users },
   { href: '/admin/referrals', label: 'Referrals', icon: Gift },
   { href: '/admin/areas', label: 'Areas', icon: MapPin },

@@ -1,5 +1,5 @@
 import { and, desc, eq, like, or } from 'drizzle-orm';
-import { ORDER_STATUSES, schema, type OrderStatus } from '@solvex/db';
+import { ORDER_STATUSES, getTechnicianOptions, schema, type OrderStatus } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireAdmin } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
 import { formatDate, formatTaka } from '@/lib/format';
 import { StatusControl } from './status-control';
+import { AssignControl } from './assign-control';
 import { allowedNext, STATUS_LABEL as LABEL, STATUS_TONE as TONE } from './transitions';
 
 export const metadata = { title: 'Orders — SolveX Admin' };
@@ -35,11 +36,17 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
       creditApplied: schema.orders.creditApplied,
       status: schema.orders.status,
       notes: schema.orders.notes,
+      areaId: schema.orders.areaId,
+      categoryId: schema.services.categoryId,
+      technicianId: schema.orders.technicianId,
+      technicianName: schema.technicians.fullName,
+      technicianPhone: schema.technicians.phone,
     })
     .from(schema.orders)
     .innerJoin(schema.services, eq(schema.services.id, schema.orders.serviceId))
     .innerJoin(schema.slotTemplates, eq(schema.slotTemplates.id, schema.orders.slotId))
-    .leftJoin(schema.areas, eq(schema.areas.id, schema.orders.areaId));
+    .leftJoin(schema.areas, eq(schema.areas.id, schema.orders.areaId))
+    .leftJoin(schema.technicians, eq(schema.technicians.id, schema.orders.technicianId));
 
   const conditions = [];
   if (filter) conditions.push(eq(schema.orders.status, filter));
@@ -59,6 +66,18 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
   const rows = await (conditions.length > 0 ? base.where(and(...conditions)) : base).orderBy(
     desc(schema.orders.createdAt),
   );
+
+  // One lookup per distinct area/category pair rather than per row.
+  const optionCache = new Map<string, Awaited<ReturnType<typeof getTechnicianOptions>>>();
+  for (const row of rows) {
+    const key = `${row.areaId ?? ''}:${row.categoryId ?? ''}`;
+    if (!optionCache.has(key)) {
+      optionCache.set(
+        key,
+        await getTechnicianOptions(db(), { areaId: row.areaId, categoryId: row.categoryId }),
+      );
+    }
+  }
 
   const counts = await db()
     .select({ status: schema.orders.status, n: schema.orders.id })
@@ -139,12 +158,13 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
                   <Th>Service</Th>
                   <Th>When</Th>
                   <Th>Total</Th>
+                  <Th>Technician</Th>
                   <Th>Status</Th>
                   <Th className="text-right">Move to</Th>
                 </tr>
               </thead>
               <tbody>
-                {rows.length === 0 && <EmptyRow colSpan={7}>No orders here yet.</EmptyRow>}
+                {rows.length === 0 && <EmptyRow colSpan={8}>No orders here yet.</EmptyRow>}
                 {rows.map((row) => (
                   <Tr key={row.id}>
                     <Td>
@@ -173,6 +193,19 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
                       {row.creditApplied > 0 && (
                         <div className="text-xs text-[var(--color-muted)]">
                           incl. {formatTaka(row.creditApplied)} credit
+                        </div>
+                      )}
+                    </Td>
+                    <Td>
+                      <AssignControl
+                        orderId={row.id}
+                        assignedId={row.technicianId}
+                        options={optionCache.get(`${row.areaId ?? ''}:${row.categoryId ?? ''}`) ?? []}
+                        closed={row.status === 'COMPLETED' || row.status === 'CANCELLED'}
+                      />
+                      {row.technicianPhone && (
+                        <div className="mt-1 text-right text-xs text-[var(--color-muted)]">
+                          {row.technicianPhone}
                         </div>
                       )}
                     </Td>
