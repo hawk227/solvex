@@ -8,6 +8,7 @@ import {
   Layers,
   Wrench,
   ShoppingCart,
+  UserCog,
   Users,
   MapPin,
   CalendarClock,
@@ -20,20 +21,35 @@ import { Logo } from '@/components/ui/logo';
 import { signOut } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Each nav entry declares the module it needs. Hiding an entry is a convenience,
+ * not a control — the page and action guards are what actually enforce access.
+ */
 const NAV = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutGrid },
-  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { href: '/admin/categories', label: 'Categories', icon: Layers },
-  { href: '/admin/services', label: 'Services', icon: Wrench },
-  { href: '/admin/technicians', label: 'Technicians', icon: HardHat },
-  { href: '/admin/customers', label: 'Customers', icon: Users },
-  { href: '/admin/referrals', label: 'Referrals', icon: Gift },
-  { href: '/admin/areas', label: 'Areas', icon: MapPin },
-  { href: '/admin/slots', label: 'Slots', icon: CalendarClock },
-  { href: '/admin/settings', label: 'Settings', icon: Settings },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutGrid, module: 'analytics' },
+  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, module: 'orders' },
+  { href: '/admin/categories', label: 'Categories', icon: Layers, module: 'catalog' },
+  { href: '/admin/services', label: 'Services', icon: Wrench, module: 'catalog' },
+  { href: '/admin/technicians', label: 'Technicians', icon: HardHat, module: 'technicians' },
+  { href: '/admin/customers', label: 'Customers', icon: Users, module: 'customers' },
+  { href: '/admin/referrals', label: 'Referrals', icon: Gift, module: 'referrals' },
+  { href: '/admin/areas', label: 'Areas', icon: MapPin, module: 'settings' },
+  { href: '/admin/slots', label: 'Slots', icon: CalendarClock, module: 'settings' },
+  { href: '/admin/settings', label: 'Settings', icon: Settings, module: 'settings' },
 ] as const;
 
-export function Sidebar({ admin }: { admin: { name: string; email: string } }) {
+export function Sidebar({
+  employee,
+}: {
+  employee: {
+    name: string;
+    email: string;
+    isOwner: boolean;
+    permissions: Record<string, string>;
+  };
+}) {
+  const allowed = (module: string) =>
+    employee.isOwner || employee.permissions[module] !== 'none';
   const pathname = usePathname();
   const router = useRouter();
 
@@ -51,10 +67,10 @@ export function Sidebar({ admin }: { admin: { name: string; email: string } }) {
 
       <nav className="flex-1 overflow-y-auto px-3 py-2">
         <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-wide text-[var(--color-muted)]">
-          Admin
+          {employee.isOwner ? 'Owner' : 'Staff'}
         </p>
         <ul className="flex flex-col gap-0.5">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {NAV.filter((item) => allowed(item.module)).map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <li key={href}>
@@ -78,16 +94,34 @@ export function Sidebar({ admin }: { admin: { name: string; email: string } }) {
         </ul>
       </nav>
 
+      {employee.isOwner && (
+        <div className="border-t border-[var(--color-border)] px-3 py-2">
+          <Link
+            href="/admin/employees"
+            className={cn(
+              'flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-[13px]',
+              'transition-colors duration-[var(--duration-hover)]',
+              pathname.startsWith('/admin/employees')
+                ? 'bg-[var(--color-primary-tint)]/30 font-medium text-[var(--color-primary)]'
+                : 'text-[var(--color-text)] hover:bg-[var(--color-card)]',
+            )}
+          >
+            <UserCog aria-hidden className="h-4 w-4 shrink-0" />
+            Employees
+          </Link>
+        </div>
+      )}
+
       <div className="border-t border-[var(--color-border)] px-3 py-3">
         <div className="flex items-center gap-3 px-2 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary-tint)] text-xs font-bold text-[var(--color-primary)]">
-            {admin.name.charAt(0).toUpperCase()}
+            {employee.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 leading-tight">
             <div className="truncate text-[13px] font-medium text-[var(--color-text)]">
-              {admin.name}
+              {employee.name}
             </div>
-            <div className="truncate text-xs text-[var(--color-muted)]">{admin.email}</div>
+            <div className="truncate text-xs text-[var(--color-muted)]">{employee.email}</div>
           </div>
         </div>
         <button

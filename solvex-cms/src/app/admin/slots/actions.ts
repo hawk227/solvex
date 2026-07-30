@@ -5,7 +5,7 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema, isUniqueViolation } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -35,7 +35,7 @@ function parse(formData: FormData) {
 }
 
 export async function createSlot(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('settings');
   const parsed = parse(formData);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid input.' };
@@ -55,7 +55,7 @@ export async function createSlot(formData: FormData): Promise<ActionResult> {
 }
 
 export async function updateSlot(id: number, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('settings');
   const parsed = parse(formData);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid input.' };
@@ -75,7 +75,7 @@ export async function updateSlot(id: number, formData: FormData): Promise<Action
 }
 
 export async function setSlotActive(id: number, active: boolean): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('settings');
   await db().update(schema.slotTemplates).set({ active }).where(eq(schema.slotTemplates.id, id));
   revalidatePath('/admin/slots');
   return { ok: true };
@@ -93,7 +93,7 @@ const CapacityInput = z.object({
  * `clearCapacityOverride`.
  */
 export async function setCapacityOverride(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('settings');
 
   const parsed = CapacityInput.safeParse({
     slotId: formData.get('slotId'),
@@ -119,7 +119,7 @@ export async function setCapacityOverride(formData: FormData): Promise<ActionRes
 }
 
 export async function clearCapacityOverride(date: string, slotId: number): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('settings');
 
   await db()
     .delete(schema.slotCapacity)

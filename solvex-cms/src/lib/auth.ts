@@ -2,7 +2,9 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { nextCookies } from 'better-auth/next-js';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { schema } from '@solvex/db';
+import { eq } from 'drizzle-orm';
+import { APIError } from 'better-auth/api';
+import { isTempPasswordExpired, schema } from '@solvex/db';
 import { db } from './cf';
 
 /**
@@ -60,6 +62,45 @@ export function auth() {
     },
     advanced: {
       cookiePrefix: 'solvex-admin',
+    },
+    databaseHooks: {
+      session: {
+        create: {
+          /**
+           * Refuse a session for a deactivated account, or one whose temporary
+           * password has gone stale unused. Checked at sign-in as well as on
+           * every request, so a stale credential shared over chat stops working
+           * rather than lingering indefinitely.
+           */
+          async before(session) {
+            const [row] = await db()
+              .select({
+                active: schema.adminUser.active,
+                mustChangePassword: schema.adminUser.mustChangePassword,
+                issuedAt: schema.adminUser.tempPasswordIssuedAt,
+              })
+              .from(schema.adminUser)
+              .where(eq(schema.adminUser.id, session.userId))
+              .limit(1);
+
+            if (!row || !row.active) {
+              throw new APIError('UNAUTHORIZED', { message: 'This account is not active.' });
+            }
+            if (isTempPasswordExpired(row.mustChangePassword, row.issuedAt)) {
+              throw new APIError('UNAUTHORIZED', {
+                message: 'This temporary password has expired. Ask an owner for a new one.',
+              });
+            }
+
+            await db()
+              .update(schema.adminUser)
+              .set({ lastLoginAt: new Date() })
+              .where(eq(schema.adminUser.id, session.userId));
+
+            return { data: session };
+          },
+        },
+      },
     },
     plugins: [nextCookies()],
   });

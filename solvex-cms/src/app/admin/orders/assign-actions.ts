@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { assignTechnician } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 
 export type AssignActionResult = { ok: true } | { ok: false; error: string };
 
@@ -18,7 +18,7 @@ export async function assignOrderTechnician(
   orderId: number,
   technicianId: number | null,
 ): Promise<AssignActionResult> {
-  const admin = await requireAdmin();
+  const admin = await requireManage('orders');
 
   const result = await assignTechnician(db(), orderId, technicianId, admin.id);
   if (!result.ok) {

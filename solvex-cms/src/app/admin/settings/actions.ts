@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -22,7 +22,7 @@ const SettingsInput = z.object({
 });
 
 export async function saveSettings(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('settings');
 
   const parsed = SettingsInput.safeParse({
     default_slot_capacity: formData.get('default_slot_capacity'),

@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema, isUniqueViolation } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -15,7 +15,7 @@ const AreaInput = z.object({
 });
 
 export async function createArea(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('settings');
 
   const parsed = AreaInput.safeParse({
     name: formData.get('name'),
@@ -39,7 +39,7 @@ export async function createArea(formData: FormData): Promise<ActionResult> {
 }
 
 export async function updateArea(id: number, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('settings');
 
   const parsed = AreaInput.safeParse({
     name: formData.get('name'),
@@ -67,7 +67,7 @@ export async function updateArea(id: number, formData: FormData): Promise<Action
  * area, since an order records where a technician was actually sent.
  */
 export async function setAreaActive(id: number, active: boolean): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('settings');
   await db().update(schema.areas).set({ active }).where(eq(schema.areas.id, id));
   revalidatePath('/admin/areas');
   return { ok: true };

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { and, desc, eq, like, or } from 'drizzle-orm';
 import { ORDER_STATUSES, schema, type OrderStatus } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ import { STATUS_LABEL as LABEL, STATUS_TONE as TONE } from './transitions';
 export const metadata = { title: 'Orders — SolveX Admin' };
 
 export default async function OrdersPage({ searchParams }: PageProps<'/admin/orders'>) {
-  await requireAdmin();
+  await requireView('orders');
 
   const params = await searchParams;
   const raw = Array.isArray(params.status) ? params.status[0] : params.status;

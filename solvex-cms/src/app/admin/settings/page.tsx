@@ -1,6 +1,6 @@
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card, CardBody } from '@/components/ui/card';
 import { SettingsForm } from './settings-form';
@@ -10,7 +10,7 @@ export const metadata = { title: 'Settings — SolveX Admin' };
 const DEFAULTS = { default_slot_capacity: 6, referral_reward_taka: 200 } as const;
 
 export default async function SettingsPage() {
-  await requireAdmin();
+  await requireView('settings');
 
   const rows = await db().select().from(schema.settings);
   const map = new Map(rows.map((r) => [r.key, r.value]));

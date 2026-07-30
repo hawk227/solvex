@@ -1,7 +1,7 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,7 @@ import { formatTaka } from '@/lib/format';
 export const metadata = { title: 'Referrals — SolveX Admin' };
 
 export default async function ReferralsPage() {
-  await requireAdmin();
+  await requireView('referrals');
   const d = db();
 
   // Table-qualified SQL text rather than interpolated Drizzle columns — see the

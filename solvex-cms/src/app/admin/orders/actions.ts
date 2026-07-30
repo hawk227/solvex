@@ -5,7 +5,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { ORDER_STATUSES, payReferralReward, schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 import { optionalText } from '@/lib/form';
 import { ALLOWED_NEXT } from './transitions';
 
@@ -25,7 +25,7 @@ const Input = z.object({
  * once it is finished, however the request was constructed.
  */
 export async function updateOrderStatus(formData: FormData): Promise<ActionResult> {
-  const admin = await requireAdmin();
+  const admin = await requireManage('orders');
 
   const parsed = Input.safeParse({
     orderId: formData.get('orderId'),

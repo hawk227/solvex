@@ -5,7 +5,7 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema, expandCombinations } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireManage } from '@/lib/session';
 
 export type ActionResult = { ok: true; written?: number } | { ok: false; error: string };
 
@@ -50,7 +50,7 @@ export async function setPrice(
   comboKey: string,
   rawPrice: FormDataEntryValue | null,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const parsed = Price.safeParse(rawPrice);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid.' };
@@ -79,7 +79,7 @@ export async function bulkFillPrices(
   serviceId: number,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   const parsed = Price.safeParse(formData.get('price'));
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid.' };
@@ -122,7 +122,7 @@ export async function bulkFillPrices(
 
 /** Remove a price so the combination shows as unpriced again. */
 export async function clearPrice(serviceId: number, comboKey: string): Promise<ActionResult> {
-  await requireAdmin();
+  await requireManage('catalog');
 
   await db()
     .delete(schema.servicePrices)

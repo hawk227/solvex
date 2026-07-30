@@ -5,5 +5,6 @@ export * from './scheduling';
 export * from './orders';
 export * from './referral';
 export * from './admin-auth';
+export * from './admin-permissions';
 export * from './customer-auth';
 export * from './technicians';

@@ -9,7 +9,7 @@ import {
   getSlotUsage,
 } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card, CardBody } from '@/components/ui/card';
 import { BarList, ColumnChart } from '@/components/ui/bar-chart';
@@ -60,7 +60,7 @@ function Stat({
 }
 
 export default async function DashboardPage() {
-  await requireAdmin();
+  await requireView('analytics');
   const d = db();
 
   const [kpis, daily, services, categories, slots, areas, growth] = await Promise.all([

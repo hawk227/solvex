@@ -1,16 +1,14 @@
 import { redirect } from 'next/navigation';
 import { getCurrentEmployee } from '@/lib/session';
 import { Logo } from '@/components/ui/logo';
-import { LoginForm } from './login-form';
-import { PoweredBy } from '@/components/layout/powered-by';
+import { ChangePasswordForm } from './change-password-form';
 
-export const metadata = { title: 'Sign in — SolveX Admin' };
-
-// Reads the session to redirect an already-signed-in admin, so it cannot be static.
 export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Change password — SolveX Admin' };
 
-export default async function LoginPage() {
-  if (await getCurrentEmployee()) redirect('/admin/dashboard');
+export default async function ChangePasswordPage() {
+  const employee = await getCurrentEmployee();
+  if (!employee) redirect('/login');
 
   return (
     <main
@@ -22,26 +20,18 @@ export default async function LoginPage() {
           <div className="flex flex-col items-center">
             <Logo height={34} />
             <h1 className="mt-6 text-2xl font-bold tracking-tight text-[var(--color-text)]">
-              Welcome back
+              {employee.mustChangePassword ? 'Choose your password' : 'Change password'}
             </h1>
             <p className="mt-1 text-center text-[13px] text-[var(--color-muted)]">
-              Sign in to the SolveX back-office
+              {employee.mustChangePassword
+                ? 'Your account uses a temporary password. Pick your own to continue.'
+                : `Signed in as ${employee.email}`}
             </p>
           </div>
 
           <div className="mt-7">
-            <LoginForm />
+            <ChangePasswordForm forced={employee.mustChangePassword} />
           </div>
-        </div>
-
-        {/* White at 80% rather than the muted grey token: this sits on the dark
-            end of the gradient, where grey-on-navy fails contrast. */}
-        <p className="mt-6 text-center text-xs text-white/80">
-          Staff access only. Accounts are created by an existing administrator.
-        </p>
-
-        <div className="mt-8 flex justify-center">
-          <PoweredBy />
         </div>
       </div>
     </main>

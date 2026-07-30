@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { desc, eq, like, or, sql } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireAdmin } from '@/lib/session';
+import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +42,7 @@ const REFERRED_COUNT = sql<number>`(
 )`;
 
 export default async function CustomersPage({ searchParams }: PageProps<'/admin/customers'>) {
-  await requireAdmin();
+  await requireView('customers');
 
   const params = await searchParams;
   const query = (Array.isArray(params.q) ? params.q[0] : params.q)?.trim() ?? '';
