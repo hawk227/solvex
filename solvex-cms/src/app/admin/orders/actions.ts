@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
-import { ORDER_STATUSES, schema } from '@solvex/db';
+import { ORDER_STATUSES, payReferralReward, schema } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireAdmin } from '@/lib/session';
 import { optionalText } from '@/lib/form';
@@ -86,7 +86,23 @@ export async function updateOrderStatus(formData: FormData): Promise<ActionResul
     adminId: admin.id,
   });
 
+  // Completing the work is what earns a referral reward. payReferralReward is
+  // idempotent and enforces "first completed order only" against the database,
+  // so calling it here cannot pay twice.
+  if (next === 'COMPLETED') {
+    const payout = await payReferralReward(d, orderId);
+    if (payout.paid) {
+      await d.insert(schema.orderEvents).values({
+        orderId,
+        status: 'COMPLETED',
+        note: `Referral reward of ৳${payout.amount} credited to the referrer`,
+        adminId: admin.id,
+      });
+    }
+  }
+
   revalidatePath('/admin/orders');
+  revalidatePath('/admin/referrals');
   revalidatePath('/admin/dashboard');
   return { ok: true };
 }

@@ -3,8 +3,10 @@ import { MapPin, Phone, User } from 'lucide-react';
 import { Container, Section } from '@/components/layout/container';
 import { Button } from '@/components/ui/button';
 import { getActiveAreas } from '@/lib/catalog';
+import { getReferralSummary, listMyReferrals } from '@/lib/referrals';
 import { getProfile, requireCustomer } from '@/lib/session';
 import { formatBdMobile } from '@/lib/phone';
+import { formatTaka } from '@/lib/format';
 import { ReferralCode } from './referral-code';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +14,12 @@ export const metadata = { title: 'Your account' };
 
 export default async function AccountPage() {
   const customer = await requireCustomer('/account');
-  const [profile, areas] = await Promise.all([getProfile(customer.id), getActiveAreas()]);
+  const [profile, areas, referrals, myReferrals] = await Promise.all([
+    getProfile(customer.id),
+    getActiveAreas(),
+    getReferralSummary(customer.id),
+    listMyReferrals(customer.id),
+  ]);
 
   const areaName = areas.find((a) => a.id === profile?.areaId)?.name ?? null;
 
@@ -87,6 +94,52 @@ export default async function AccountPage() {
                   Share this code. When their first booking is completed, your account is credited.
                 </p>
                 <ReferralCode code={profile.referralCode} />
+
+                <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-[var(--color-border)] pt-4 text-center">
+                  <div>
+                    <dt className="text-[var(--web-font-size-caption)] text-[var(--color-muted)]">
+                      Invited
+                    </dt>
+                    <dd className="text-xl font-bold">{referrals.invited}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[var(--web-font-size-caption)] text-[var(--color-muted)]">
+                      Rewarded
+                    </dt>
+                    <dd className="text-xl font-bold">{referrals.rewarded}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[var(--web-font-size-caption)] text-[var(--color-muted)]">
+                      Credit left
+                    </dt>
+                    <dd className="text-xl font-bold text-[var(--color-success)]">
+                      {formatTaka(referrals.balance)}
+                    </dd>
+                  </div>
+                </dl>
+
+                {myReferrals.length > 0 && (
+                  <ul className="mt-4 flex flex-col gap-2 border-t border-[var(--color-border)] pt-4">
+                    {myReferrals.map((r, i) => (
+                      <li
+                        key={i}
+                        className="flex items-center justify-between gap-3 text-[var(--web-font-size-small)]"
+                      >
+                        <span>{r.refereeName ?? 'A friend'}</span>
+                        <span
+                          className={
+                            r.status === 'REWARDED'
+                              ? 'text-[var(--color-success)]'
+                              : 'text-[var(--color-muted)]'
+                          }
+                        >
+                          {r.status === 'REWARDED' ? 'Credited' : 'Awaiting first job'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
                 <Link
                   href="/referral"
                   className="mt-4 inline-flex items-center gap-1 text-[var(--web-font-size-small)] text-[var(--color-primary)] hover:underline"
