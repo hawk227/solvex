@@ -52,11 +52,18 @@ export function MobileNav({ links }: { links: readonly { href: string; label: st
 
           <div className="mt-auto flex flex-col gap-2">
             {signedIn ? (
-              <Button asChild variant="outline">
-                <Link href="/account" onClick={() => setOpen(false)}>
-                  Your account
-                </Link>
-              </Button>
+              <>
+                <Button asChild variant="outline">
+                  <Link href="/orders" onClick={() => setOpen(false)}>
+                    Your bookings
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/account" onClick={() => setOpen(false)}>
+                    Your account
+                  </Link>
+                </Button>
+              </>
             ) : (
               <>
                 <Button asChild variant="outline">

@@ -6,14 +6,15 @@ import { z } from 'zod';
 import { schema, slugify, isUniqueViolation, parseList, parseFaqs } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireAdmin } from '@/lib/session';
+import { optionalInt, optionalText } from '@/lib/form';
 
 export type ActionResult = { ok: true; id?: number } | { ok: false; error: string };
 
 const BasicsInput = z.object({
   categoryId: z.coerce.number().int().positive('Pick a category.'),
   name: z.string().trim().min(2, 'Name must be at least 2 characters.').max(120),
-  shortDesc: z.string().trim().max(300).optional().or(z.literal('')),
-  durationMin: z.coerce.number().int().min(0).max(1440).optional(),
+  shortDesc: optionalText(300),
+  durationMin: optionalInt(0, 1440),
   sort: z.coerce.number().int().min(0).max(9999).default(0),
 });
 
@@ -91,10 +92,10 @@ export async function updateServiceBasics(id: number, formData: FormData): Promi
 }
 
 const ContentInput = z.object({
-  aboutMd: z.string().trim().max(8000).optional().or(z.literal('')),
-  included: z.string().max(4000).optional().or(z.literal('')),
-  notIncluded: z.string().max(4000).optional().or(z.literal('')),
-  faqs: z.string().max(12000).optional().or(z.literal('')),
+  aboutMd: optionalText(8000),
+  included: optionalText(4000),
+  notIncluded: optionalText(4000),
+  faqs: optionalText(12000),
 });
 
 export async function updateServiceContent(id: number, formData: FormData): Promise<ActionResult> {

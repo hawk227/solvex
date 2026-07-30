@@ -17,3 +17,10 @@ export * from "./errors";
 export * from "./content";
 export * from "./aggregates";
 export * from "./referral";
+export * from "./place-order";
+
+// Types and enums used across both apps. The `schema` namespace export above
+// carries the tables; these are the accompanying value/type exports.
+export { ORDER_STATUSES, type OrderStatus } from './schema/orders';
+export { REFERRAL_STATUSES, type ReferralStatus, CREDIT_REASONS, type CreditReason } from './schema/referral';
+export type { Faq } from './schema/catalog';

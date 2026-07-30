@@ -6,12 +6,13 @@ import { z } from 'zod';
 import { schema, slugify, isUniqueViolation } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireAdmin } from '@/lib/session';
+import { optionalText } from '@/lib/form';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
 const CategoryInput = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters.').max(80),
-  description: z.string().trim().max(500).optional().or(z.literal('')),
+  description: optionalText(500),
   sort: z.coerce.number().int().min(0).max(9999).default(0),
 });
 
