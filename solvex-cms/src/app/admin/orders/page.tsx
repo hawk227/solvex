@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, like, or } from 'drizzle-orm';
 import { ORDER_STATUSES, schema, type OrderStatus } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireAdmin } from '@/lib/session';
@@ -18,6 +18,7 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
   const params = await searchParams;
   const raw = Array.isArray(params.status) ? params.status[0] : params.status;
   const filter = ORDER_STATUSES.find((s) => s === raw);
+  const query = (Array.isArray(params.q) ? params.q[0] : params.q)?.trim() ?? '';
 
   const base = db()
     .select({
@@ -40,7 +41,22 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
     .innerJoin(schema.slotTemplates, eq(schema.slotTemplates.id, schema.orders.slotId))
     .leftJoin(schema.areas, eq(schema.areas.id, schema.orders.areaId));
 
-  const rows = await (filter ? base.where(eq(schema.orders.status, filter)) : base).orderBy(
+  const conditions = [];
+  if (filter) conditions.push(eq(schema.orders.status, filter));
+  if (query) {
+    // Escape LIKE wildcards so a typed "%" searches for a literal percent sign
+    // rather than matching every order.
+    const term = `%${query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+    conditions.push(
+      or(
+        like(schema.orders.code, term),
+        like(schema.orders.phoneSnapshot, term),
+        like(schema.orders.nameSnapshot, term),
+      )!,
+    );
+  }
+
+  const rows = await (conditions.length > 0 ? base.where(and(...conditions)) : base).orderBy(
     desc(schema.orders.createdAt),
   );
 
@@ -61,9 +77,35 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
           subtitle={`${rows.length} shown · ${byStatus.get('PENDING') ?? 0} awaiting approval`}
         />
 
+        <form method="get" className="mb-5 flex flex-wrap items-center gap-2">
+          {filter && <input type="hidden" name="status" value={filter} />}
+          <input
+            type="search"
+            name="q"
+            defaultValue={query}
+            placeholder="Search by order code, phone or name"
+            aria-label="Search orders"
+            className="h-[var(--cms-input-height)] min-w-64 flex-1 rounded-[var(--cms-control-radius)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-[13px]"
+          />
+          <button
+            type="submit"
+            className="inline-flex h-[var(--cms-control-height)] items-center rounded-[var(--cms-control-radius)] bg-[var(--color-primary)] px-4 text-[13px] font-medium text-[var(--color-primary-foreground)] transition-colors duration-[var(--duration-hover)] hover:bg-[var(--color-primary-hover)]"
+          >
+            Search
+          </button>
+          {query && (
+            <a
+              href={filter ? `/admin/orders?status=${filter}` : '/admin/orders'}
+              className="text-[13px] text-[var(--color-muted)] hover:text-[var(--color-text)]"
+            >
+              Clear
+            </a>
+          )}
+        </form>
+
         <div className="mb-5 flex flex-wrap items-center gap-2">
           <a
-            href="/admin/orders"
+            href={query ? `/admin/orders?q=${encodeURIComponent(query)}` : '/admin/orders'}
             className={`inline-flex h-8 items-center gap-2 rounded-[var(--radius-pill)] px-3 text-[13px] ${
               !filter
                 ? 'bg-[var(--color-text)] text-white'
@@ -75,7 +117,7 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
           {ORDER_STATUSES.map((status) => (
             <a
               key={status}
-              href={`/admin/orders?status=${status}`}
+              href={`/admin/orders?status=${status}${query ? `&q=${encodeURIComponent(query)}` : ''}`}
               className={`inline-flex h-8 items-center gap-2 rounded-[var(--radius-pill)] px-3 text-[13px] ${
                 filter === status
                   ? 'bg-[var(--color-text)] text-white'
