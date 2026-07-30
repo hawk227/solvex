@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Build output, not source. Linting the bundled Worker exhausted the
+    // Node heap and crashed eslint outright.
+    ".open-next/**",
+    ".wrangler/**",
   ]),
 ]);
 
