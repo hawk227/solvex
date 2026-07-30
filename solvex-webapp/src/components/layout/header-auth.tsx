@@ -59,6 +59,14 @@ export function HeaderAuth() {
         >
           <DropdownMenu.Item asChild>
             <Link
+              href="/orders"
+              className="flex min-h-[var(--web-control-height)] cursor-pointer items-center rounded-[var(--radius-sm)] px-3 text-[var(--web-font-size-small)] outline-none data-[highlighted]:bg-[var(--color-surface)]"
+            >
+              Your bookings
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
               href="/account"
               className="flex min-h-[var(--web-control-height)] cursor-pointer items-center rounded-[var(--radius-sm)] px-3 text-[var(--web-font-size-small)] outline-none data-[highlighted]:bg-[var(--color-surface)]"
             >
