@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 import { Card, CardBody } from '@/components/ui/card';
+import { ReadOnlyNotice } from '@/components/ui/read-only-notice';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Th, Td, Tr } from '@/components/ui/table';
 import { formatTaka } from '@/lib/format';
@@ -21,11 +22,13 @@ export function PriceMatrix({
   groupNames,
   rows,
   blocked,
+  readOnly = false,
 }: {
   serviceId: number;
   groupNames: string[];
   rows: MatrixRow[];
   blocked: boolean;
+  readOnly?: boolean;
 }) {
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
@@ -69,6 +72,9 @@ export function PriceMatrix({
 
   return (
     <div className="flex flex-col gap-5">
+      {readOnly && <ReadOnlyNotice what="pricing" />}
+
+      {!readOnly && (
       <Card>
         <CardBody>
           <h3 className="text-[13px] font-bold text-[var(--color-text)]">Bulk fill</h3>
@@ -118,6 +124,7 @@ export function PriceMatrix({
           )}
         </CardBody>
       </Card>
+      )}
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-2 px-6 pb-2 pt-5">
@@ -157,6 +164,11 @@ export function PriceMatrix({
                     ))
                   )}
                   <Td>
+                    {readOnly ? (
+                      <span className="font-medium">
+                        {row.price === null ? '—' : formatTaka(row.price)}
+                      </span>
+                    ) : (
                     <form
                       onSubmit={(e) => {
                         e.preventDefault();
@@ -183,9 +195,10 @@ export function PriceMatrix({
                         </span>
                       )}
                     </form>
+                    )}
                   </Td>
                   <Td className="text-right">
-                    {row.price !== null && (
+                    {!readOnly && row.price !== null && (
                       <Button
                         variant="ghost"
                         size="sm"

@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTechnicianOptions } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireView } from '@/lib/session';
+import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
+import { ReadOnlyNotice } from '@/components/ui/read-only-notice';
 import { Card, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatDateTime, formatTaka } from '@/lib/format';
@@ -35,7 +36,8 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 export default async function OrderDetailPage({ params }: PageProps<'/admin/orders/[id]'>) {
-  await requireView('orders');
+  const employee = await requireView('orders');
+  const editable = canManage(employee, 'orders');
 
   const { id } = await params;
   const orderId = Number.parseInt(id, 10);
@@ -78,7 +80,10 @@ export default async function OrderDetailPage({ params }: PageProps<'/admin/orde
             {/* Everything that changes the order lives together at the top. */}
             <Card>
               <CardBody>
-                <h2 className="text-base font-bold text-[var(--color-text)]">Manage this order</h2>
+                <h2 className="text-base font-bold text-[var(--color-text)]">
+                  {editable ? 'Manage this order' : 'Order status'}
+                </h2>
+                {!editable && <ReadOnlyNotice what="orders" className="mt-4" />}
 
                 <div className="mt-5 flex flex-col gap-5">
                   <div>
@@ -91,6 +96,8 @@ export default async function OrderDetailPage({ params }: PageProps<'/admin/orde
                           ? 'This job is complete. No further changes.'
                           : 'This order was cancelled. No further changes.'}
                       </p>
+                    ) : !editable ? (
+                      <p className="text-[13px]">{STATUS_LABEL[order.status]}</p>
                     ) : (
                       <StatusControl
                         orderId={order.id}
@@ -108,7 +115,7 @@ export default async function OrderDetailPage({ params }: PageProps<'/admin/orde
                       orderId={order.id}
                       assignedId={order.technicianId}
                       options={technicianOptions}
-                      closed={closed}
+                      closed={closed || !editable}
                     />
                     {order.technicianName && (
                       <p className="mt-2 text-[13px] text-[var(--color-muted)]">

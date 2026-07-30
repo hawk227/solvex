@@ -1,7 +1,7 @@
 import { asc } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireView } from '@/lib/session';
+import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,8 @@ import { setAreaActive } from './actions';
 export const metadata = { title: 'Areas — SolveX Admin' };
 
 export default async function AreasPage() {
-  await requireView('settings');
+  const employee = await requireView('settings');
+  const editable = canManage(employee, 'settings');
 
   const rows = await db()
     .select()
@@ -29,7 +30,7 @@ export default async function AreasPage() {
         <PageHeader
           title="Service areas"
           subtitle={`${rows.length} areas · ${activeCount} accepting bookings`}
-          actions={<AreaForm />}
+          actions={editable ? <AreaForm /> : null}
         />
 
         <Card>
@@ -60,13 +61,19 @@ export default async function AreasPage() {
                     </Td>
                     <Td>
                       <div className="flex items-center justify-end gap-2">
-                        <ActiveToggle
-                          id={row.id}
-                          active={row.active}
-                          label={row.name}
-                          action={setAreaActive}
-                        />
-                        <AreaForm area={{ id: row.id, name: row.name, sort: row.sort }} />
+                        {editable ? (
+                          <>
+                            <ActiveToggle
+                              id={row.id}
+                              active={row.active}
+                              label={row.name}
+                              action={setAreaActive}
+                            />
+                            <AreaForm area={{ id: row.id, name: row.name, sort: row.sort }} />
+                          </>
+                        ) : (
+                          <span className="text-xs text-[var(--color-muted)]">View only</span>
+                        )}
                       </div>
                     </Td>
                   </Tr>

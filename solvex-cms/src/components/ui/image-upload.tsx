@@ -12,12 +12,14 @@ export function ImageUpload({
   label,
   /** Thumbnail-only variant for table cells: no hint text, smaller preview. */
   compact = false,
+  readOnly = false,
 }: {
   target: 'categories' | 'services';
   id: number;
   imageUrl: string | null;
   label: string;
   compact?: boolean;
+  readOnly?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string>();
@@ -36,6 +38,20 @@ export function ImageUpload({
     setPending(false);
     if (input.current) input.current.value = '';
     if (!result.ok) setError(result.error);
+  }
+
+  // With no permission to change the catalog, show the image and nothing else.
+  if (readOnly) {
+    return imageUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imageUrl}
+        alt={`${label} image`}
+        className="h-20 w-20 rounded-[var(--radius-md)] object-cover"
+      />
+    ) : (
+      <p className="text-[13px] text-[var(--color-muted)]">No image uploaded.</p>
+    );
   }
 
   if (compact) {

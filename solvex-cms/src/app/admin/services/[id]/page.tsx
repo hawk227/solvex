@@ -3,9 +3,10 @@ import { notFound } from 'next/navigation';
 import { asc, eq } from 'drizzle-orm';
 import { schema, buildComboKey, faqsToText, listToText } from '@solvex/db';
 import { db, imageUrl } from '@/lib/cf';
-import { requireView } from '@/lib/session';
+import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Badge } from '@/components/ui/badge';
+import { ReadOnlyNotice } from '@/components/ui/read-only-notice';
 import { Card, CardBody } from '@/components/ui/card';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { Tabs } from '@/components/ui/tabs';
@@ -14,7 +15,8 @@ import { VariablesEditor, type Group } from './variables-editor';
 import { PriceMatrix, type MatrixRow } from './price-matrix';
 
 export default async function ServiceDetailPage({ params }: PageProps<'/admin/services/[id]'>) {
-  await requireView('catalog');
+  const employee = await requireView('catalog');
+  const editable = canManage(employee, 'catalog');
 
   // Next 16: params is a Promise.
   const { id } = await params;
@@ -103,7 +105,37 @@ export default async function ServiceDetailPage({ params }: PageProps<'/admin/se
             {
               value: 'content',
               label: 'Content',
-              content: (
+              content: !editable ? (
+                <>
+                  <ReadOnlyNotice what="services" />
+                  <div className="mt-5 flex flex-col gap-5 text-[13px]">
+                    <div>
+                      <p className="font-medium">About this service</p>
+                      <p className="mt-1 whitespace-pre-line text-[var(--color-muted)]">
+                        {service.aboutMd || '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium">What&rsquo;s included</p>
+                      <p className="mt-1 whitespace-pre-line text-[var(--color-muted)]">
+                        {listToText(service.includedJson) || '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Not included</p>
+                      <p className="mt-1 whitespace-pre-line text-[var(--color-muted)]">
+                        {listToText(service.notIncludedJson) || '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium">FAQs</p>
+                      <p className="mt-1 whitespace-pre-line text-[var(--color-muted)]">
+                        {faqsToText(service.faqsJson) || '—'}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              ) : (
                 <ContentEditor
                   serviceId={serviceId}
                   aboutMd={service.aboutMd ?? ''}
@@ -116,7 +148,26 @@ export default async function ServiceDetailPage({ params }: PageProps<'/admin/se
             {
               value: 'variables',
               label: `Variables${groups.length ? ` (${groups.length})` : ''}`,
-              content: <VariablesEditor serviceId={serviceId} groups={groups} />,
+              content: editable ? (
+                <VariablesEditor serviceId={serviceId} groups={groups} />
+              ) : (
+                <>
+                  <ReadOnlyNotice what="services" />
+                  <ul className="mt-4 flex flex-col gap-2 text-[13px]">
+                    {groups.length === 0 && (
+                      <li className="text-[var(--color-muted)]">No variables.</li>
+                    )}
+                    {groups.map((g) => (
+                      <li key={g.id}>
+                        <span className="font-medium">{g.name}</span>
+                        <span className="ml-2 text-[var(--color-muted)]">
+                          {g.options.map((o) => o.label).join(', ') || 'no options'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ),
             },
             {
               value: 'pricing',
@@ -127,6 +178,7 @@ export default async function ServiceDetailPage({ params }: PageProps<'/admin/se
                   groupNames={groups.map((g) => g.name)}
                   rows={rows}
                   blocked={blocked}
+                  readOnly={!editable}
                 />
               ),
             },
@@ -136,11 +188,13 @@ export default async function ServiceDetailPage({ params }: PageProps<'/admin/se
               content: (
                 <Card>
                   <CardBody>
+                    {!editable && <ReadOnlyNotice what="services" className="mb-4" />}
                     <ImageUpload
                       target="services"
                       id={serviceId}
                       imageUrl={imageUrl(service.imageKey)}
                       label={service.name}
+                      readOnly={!editable}
                     />
                   </CardBody>
                 </Card>

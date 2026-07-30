@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { asc, count, eq } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db, imageUrl } from '@/lib/cf';
-import { requireView } from '@/lib/session';
+import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { ImageUpload } from '@/components/ui/image-upload';
@@ -15,7 +15,8 @@ import { setCategoryActive } from './actions';
 export const metadata = { title: 'Categories — SolveX Admin' };
 
 export default async function CategoriesPage() {
-  await requireView('catalog');
+  const employee = await requireView('catalog');
+  const editable = canManage(employee, 'catalog');
 
   const rows = await db()
     .select({
@@ -42,7 +43,7 @@ export default async function CategoriesPage() {
         <PageHeader
           title="Categories"
           subtitle={`${rows.length} total · ${activeCount} active`}
-          actions={<CategoryForm />}
+          actions={editable ? <CategoryForm /> : null}
         />
 
         <Card>
@@ -74,6 +75,7 @@ export default async function CategoriesPage() {
                         imageUrl={imageUrl(row.imageKey)}
                         label={row.name}
                         compact
+                        readOnly={!editable}
                       />
                     </Td>
                     <Td>
@@ -105,20 +107,26 @@ export default async function CategoriesPage() {
                     </Td>
                     <Td>
                       <div className="flex items-center justify-end gap-2">
-                        <ActiveToggle
-                          id={row.id}
-                          active={row.active}
-                          label={row.name}
-                          action={setCategoryActive}
-                        />
-                        <CategoryForm
-                          category={{
-                            id: row.id,
-                            name: row.name,
-                            description: row.description,
-                            sort: row.sort,
-                          }}
-                        />
+                        {editable ? (
+                          <>
+                            <ActiveToggle
+                              id={row.id}
+                              active={row.active}
+                              label={row.name}
+                              action={setCategoryActive}
+                            />
+                            <CategoryForm
+                              category={{
+                                id: row.id,
+                                name: row.name,
+                                description: row.description,
+                                sort: row.sort,
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <span className="text-xs text-[var(--color-muted)]">View only</span>
+                        )}
                       </div>
                     </Td>
                   </Tr>

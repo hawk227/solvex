@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { asc, eq } from 'drizzle-orm';
 import { schema, servicePriceCount, variableGroupCount } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireView } from '@/lib/session';
+import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,8 @@ import { setServiceActive } from './actions';
 export const metadata = { title: 'Services — SolveX Admin' };
 
 export default async function ServicesPage() {
-  await requireView('catalog');
+  const employee = await requireView('catalog');
+  const editable = canManage(employee, 'catalog');
   const d = db();
 
   const [categories, rows] = await Promise.all([
@@ -54,7 +55,7 @@ export default async function ServicesPage() {
         <PageHeader
           title="Services"
           subtitle={`${rows.length} total · ${activeCount} active`}
-          actions={<ServiceForm categories={categories} />}
+          actions={editable ? <ServiceForm categories={categories} /> : null}
         />
 
         {categories.length === 0 && (
@@ -150,12 +151,14 @@ export default async function ServicesPage() {
                         >
                           Edit content
                         </Link>
-                        <ActiveToggle
-                          id={row.id}
-                          active={row.active}
-                          label={row.name}
-                          action={setServiceActive}
-                        />
+                        {editable && (
+                          <ActiveToggle
+                            id={row.id}
+                            active={row.active}
+                            label={row.name}
+                            action={setServiceActive}
+                          />
+                        )}
                         <ServiceForm
                           categories={categories}
                           service={{

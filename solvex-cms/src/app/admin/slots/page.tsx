@@ -1,8 +1,9 @@
 import { asc, eq } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireView } from '@/lib/session';
+import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
+import { ReadOnlyNotice } from '@/components/ui/read-only-notice';
 import { Card, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ActiveToggle } from '@/components/ui/active-toggle';
@@ -15,7 +16,8 @@ import { setSlotActive } from './actions';
 export const metadata = { title: 'Slots — SolveX Admin' };
 
 export default async function SlotsPage() {
-  await requireView('settings');
+  const employee = await requireView('settings');
+  const editable = canManage(employee, 'settings');
   const d = db();
 
   const [slots, overrides, defaultCapacity] = await Promise.all([
@@ -45,7 +47,7 @@ export default async function SlotsPage() {
         <PageHeader
           title="Booking slots"
           subtitle={`${slots.length} slots · default capacity ${fallback} per slot per day`}
-          actions={<SlotForm />}
+          actions={editable ? <SlotForm /> : null}
         />
 
         <Card className="mb-6">
@@ -80,21 +82,27 @@ export default async function SlotsPage() {
                     </Td>
                     <Td>
                       <div className="flex items-center justify-end gap-2">
-                        <ActiveToggle
-                          id={slot.id}
-                          active={slot.active}
-                          label={slot.label}
-                          action={setSlotActive}
-                        />
-                        <SlotForm
-                          slot={{
-                            id: slot.id,
-                            label: slot.label,
-                            startTime: slot.startTime,
-                            endTime: slot.endTime,
-                            sort: slot.sort,
-                          }}
-                        />
+                        {editable ? (
+                          <>
+                            <ActiveToggle
+                              id={slot.id}
+                              active={slot.active}
+                              label={slot.label}
+                              action={setSlotActive}
+                            />
+                            <SlotForm
+                              slot={{
+                                id: slot.id,
+                                label: slot.label,
+                                startTime: slot.startTime,
+                                endTime: slot.endTime,
+                                sort: slot.sort,
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <span className="text-xs text-[var(--color-muted)]">View only</span>
+                        )}
                       </div>
                     </Td>
                   </Tr>
@@ -111,11 +119,15 @@ export default async function SlotsPage() {
               Days without an override use the default of {fallback}. Set 0 to close a slot for a
               specific date, such as a public holiday.
             </p>
-            <CapacityOverrides
+            {editable ? (
+              <CapacityOverrides
               slots={slots.map((s) => ({ id: s.id, label: s.label }))}
               overrides={overrides.map((o) => ({ ...o, dateLabel: formatDate(o.date) }))}
-              defaultCapacity={fallback}
-            />
+                defaultCapacity={fallback}
+              />
+            ) : (
+              <ReadOnlyNotice what="booking slots" className="mt-4" />
+            )}
           </CardBody>
         </Card>
       </main>

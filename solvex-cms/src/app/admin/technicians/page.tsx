@@ -1,7 +1,7 @@
 import { asc, eq, sql } from 'drizzle-orm';
 import { schema } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireView } from '@/lib/session';
+import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,8 @@ import { setTechnicianActive } from './actions';
 export const metadata = { title: 'Technicians — SolveX Admin' };
 
 export default async function TechniciansPage() {
-  await requireView('technicians');
+  const employee = await requireView('technicians');
+  const editable = canManage(employee, 'technicians');
   const d = db();
 
   // Table-qualified SQL text: interpolating Drizzle columns into a raw template
@@ -96,7 +97,7 @@ export default async function TechniciansPage() {
         <PageHeader
           title="Technicians"
           subtitle={`${rows.length} on the books · ${activeCount} on the rota`}
-          actions={<TechnicianForm categories={categories} areas={areas} />}
+          actions={editable ? <TechnicianForm categories={categories} areas={areas} /> : null}
         />
 
         <Card>
@@ -170,12 +171,14 @@ export default async function TechniciansPage() {
                       </Td>
                       <Td>
                         <div className="flex items-center justify-end gap-2">
-                          <ActiveToggle
-                            id={row.id}
-                            active={row.active}
-                            label={row.fullName}
-                            action={setTechnicianActive}
-                          />
+                          {editable && (
+                            <ActiveToggle
+                              id={row.id}
+                              active={row.active}
+                              label={row.fullName}
+                              action={setTechnicianActive}
+                            />
+                          )}
                           <TechnicianForm
                             categories={categories}
                             areas={areas}

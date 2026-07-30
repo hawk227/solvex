@@ -72,6 +72,16 @@ export async function requireOwner(): Promise<Employee> {
   return employee;
 }
 
+/**
+ * Whether the current employee may change this module.
+ *
+ * For deciding what to render. The action guards remain the control: a page that
+ * forgets this check is untidy, one that forgets `requireManage` is insecure.
+ */
+export function canManage(employee: Employee, module: PermissionModule): boolean {
+  return can(employee, module, 'manage');
+}
+
 /** For building navigation. Not a control — the guards above are. */
 export async function getVisibleModules(): Promise<PermissionModule[]> {
   const employee = await getCurrentEmployee();
