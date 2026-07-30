@@ -46,13 +46,13 @@ export function AssignControl({
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col gap-1">
       <select
         aria-label="Assign technician"
         value={assignedId ?? ''}
         disabled={pending}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 max-w-48 rounded-[var(--cms-control-radius)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-2 text-[13px] disabled:opacity-50"
+        className="h-[var(--cms-input-height)] w-full max-w-sm rounded-[var(--cms-control-radius)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-2 text-[13px] disabled:opacity-50"
       >
         <option value="">Unassigned</option>
         {options.map((o) => (
@@ -66,7 +66,7 @@ export function AssignControl({
         ))}
       </select>
       {error && (
-        <p role="alert" className="max-w-48 text-right text-xs text-[var(--color-danger)]">
+        <p role="alert" className="text-xs text-[var(--color-danger)]">
           {error}
         </p>
       )}

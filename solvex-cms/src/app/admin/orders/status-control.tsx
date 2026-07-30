@@ -78,7 +78,7 @@ export function StatusControl({
   }
 
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div className="flex flex-col gap-2">
       {advanceOptions.length > 0 && (
         <form onSubmit={onSubmit} className="flex items-center gap-2">
           <select
@@ -89,7 +89,7 @@ export function StatusControl({
             aria-label="Move order to"
             value={next}
             onChange={(e) => setChosen(e.target.value)}
-            className="h-8 rounded-[var(--cms-control-radius)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-2 text-[13px]"
+            className="h-[var(--cms-input-height)] rounded-[var(--cms-control-radius)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-[13px]"
           >
             {advanceOptions.map((o) => (
               <option key={o.value} value={o.value}>
@@ -97,8 +97,8 @@ export function StatusControl({
               </option>
             ))}
           </select>
-          <Input name="note" placeholder="Note (optional)" className="h-8 w-36 text-xs" />
-          <Button type="submit" size="sm" disabled={pending}>
+          <Input name="note" placeholder="Note (optional)" className="h-[var(--cms-input-height)] w-56" />
+          <Button type="submit" disabled={pending}>
             {pending ? '…' : 'Apply'}
           </Button>
         </form>
@@ -107,7 +107,7 @@ export function StatusControl({
       {canCancel &&
         (confirmingCancel ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[var(--color-muted)]">Cancel this order?</span>
+            <span className="text-[13px] text-[var(--color-muted)]">Cancel this order?</span>
             <Button size="sm" variant="ghost" onClick={() => setConfirmingCancel(false)} disabled={pending}>
               No
             </Button>
@@ -126,7 +126,7 @@ export function StatusControl({
         ))}
 
       {error && (
-        <p role="alert" className="max-w-64 text-xs text-[var(--color-danger)]">
+        <p role="alert" className="text-[13px] text-[var(--color-danger)]">
           {error}
         </p>
       )}

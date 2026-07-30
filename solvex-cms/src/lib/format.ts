@@ -14,3 +14,14 @@ export function formatDate(iso: string): string {
     timeZone: 'UTC',
   });
 }
+
+/** Timestamp for an activity timeline, in Asia/Dhaka. */
+export function formatDateTime(date: Date): string {
+  return date.toLocaleString('en-GB', {
+    timeZone: 'Asia/Dhaka',
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
