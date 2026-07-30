@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { asc, count, eq } from 'drizzle-orm';
 import { schema } from '@solvex/db';
-import { db } from '@/lib/cf';
+import { db, imageUrl } from '@/lib/cf';
 import { requireAdmin } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
 import { CategoryForm } from './category-form';
@@ -24,6 +25,7 @@ export default async function CategoriesPage() {
       description: schema.categories.description,
       sort: schema.categories.sort,
       active: schema.categories.active,
+      imageKey: schema.categories.imageKey,
       services: count(schema.services.id),
     })
     .from(schema.categories)
@@ -48,6 +50,7 @@ export default async function CategoriesPage() {
             <Table>
               <thead>
                 <tr>
+                  <Th>Image</Th>
                   <Th>Name</Th>
                   <Th>Slug</Th>
                   <Th>Services</Th>
@@ -58,12 +61,21 @@ export default async function CategoriesPage() {
               </thead>
               <tbody>
                 {rows.length === 0 && (
-                  <EmptyRow colSpan={6}>
+                  <EmptyRow colSpan={7}>
                     No categories yet. Add one to start building the catalog.
                   </EmptyRow>
                 )}
                 {rows.map((row) => (
                   <Tr key={row.id}>
+                    <Td>
+                      <ImageUpload
+                        target="categories"
+                        id={row.id}
+                        imageUrl={imageUrl(row.imageKey)}
+                        label={row.name}
+                        compact
+                      />
+                    </Td>
                     <Td>
                       <div className="font-medium">{row.name}</div>
                       {row.description && (
