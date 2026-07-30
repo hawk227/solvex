@@ -70,3 +70,27 @@ The seed is idempotent — re-running it will not duplicate rows.
 
 Never commit secrets. Local values go in a gitignored `.dev.vars`; deployed
 values go in via `wrangler secret put <NAME>`.
+
+## 5. Create the first admin
+
+The CMS has no public signup. The first admin is created once through a
+bootstrap route that refuses to run a second time.
+
+Set a one-time token (local: add `SETUP_TOKEN` to `solvex-cms/.dev.vars`;
+deployed: `npx wrangler secret put SETUP_TOKEN`), then:
+
+```bash
+curl -X POST https://<your-cms-host>/api/setup -H "content-type: application/json" -H "x-setup-token: $SETUP_TOKEN" -d '{"name":"Your Name","email":"you@example.com","password":"a-long-password"}'
+```
+
+The route refuses unless `admin_user` is empty, so it closes permanently after
+the first admin exists. Remove the `SETUP_TOKEN` secret afterwards. Every
+further admin is invited from inside the CMS.
+
+## Required secrets
+
+| Name | Where | Purpose |
+|---|---|---|
+| `BETTER_AUTH_SECRET` | both | Signs admin session cookies. 32+ random bytes. |
+| `BETTER_AUTH_URL` | both | Public origin of the app. |
+| `SETUP_TOKEN` | CMS, temporary | Guards the one-shot first-admin route. Remove after use. |
