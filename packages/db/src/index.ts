@@ -26,3 +26,4 @@ export { REFERRAL_STATUSES, type ReferralStatus, CREDIT_REASONS, type CreditReas
 export type { Faq } from './schema/catalog';
 export * from "./referral-payout";
 export * from "./analytics";
+export * from "./technicians";
