@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Container } from './container';
+import { Logo } from '@/components/ui/logo';
 
 const COLUMNS = [
   {
@@ -34,12 +35,7 @@ export function SiteFooter() {
       <Container>
         <div className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-primary)] text-base font-bold text-[var(--color-primary-foreground)]">
-                S
-              </span>
-              <span className="text-lg font-bold">SolveX</span>
-            </div>
+            <Logo height={34} />
             <p className="mt-3 max-w-[32ch] text-[var(--web-font-size-small)] text-[var(--color-muted)]">
               Appliance servicing at your door in Dhaka. AC, fridge, oven and washing machine
               experts, booked in minutes.

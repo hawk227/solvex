@@ -1,5 +1,6 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
+import { Logo } from './logo';
 
 const FIELD =
   'w-full rounded-[var(--web-control-radius)] border border-[var(--color-border)] bg-[var(--color-input-bg)] ' +
@@ -65,6 +66,9 @@ export function AuthCard({
   return (
     <main className="flex flex-1 items-center justify-center bg-[var(--color-surface)] px-4 py-16">
       <div className="w-full max-w-md">
+        <div className="mb-6 flex justify-center">
+          <Logo height={40} />
+        </div>
         <div className="rounded-[var(--web-card-radius)] border border-[var(--color-border)] bg-[var(--color-card)] p-6 md:p-8">
           <h1 className="text-2xl font-semibold text-[var(--color-text)]">{title}</h1>
           {subtitle && (

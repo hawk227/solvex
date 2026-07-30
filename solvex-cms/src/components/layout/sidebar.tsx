@@ -15,6 +15,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { Logo } from '@/components/ui/logo';
 import { signOut } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 
@@ -39,14 +40,11 @@ export function Sidebar({ admin }: { admin: { name: string; email: string } }) {
       className="flex h-screen w-[var(--cms-sidebar-width)] shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]"
       aria-label="Main"
     >
-      <div className="flex items-center gap-3 px-5 py-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-primary)] text-base font-bold text-[var(--color-primary-foreground)]">
-          S
-        </div>
-        <div className="leading-tight">
-          <div className="text-base font-bold text-[var(--color-text)]">SolveX</div>
-          <div className="text-xs text-[var(--color-muted)]">Back-office</div>
-        </div>
+      <div className="flex flex-col gap-1 px-5 py-5">
+        <Link href="/admin/dashboard" aria-label="SolveX back-office home">
+          <Logo height={30} />
+        </Link>
+        <span className="text-xs text-[var(--color-muted)]">Back-office</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-2">
