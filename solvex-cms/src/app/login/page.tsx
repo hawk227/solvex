@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getAdmin } from '@/lib/session';
 import { Logo } from '@/components/ui/logo';
 import { LoginForm } from './login-form';
+import { PoweredBy } from '@/components/layout/powered-by';
 
 export const metadata = { title: 'Sign in — SolveX Admin' };
 
@@ -38,6 +39,10 @@ export default async function LoginPage() {
         <p className="mt-6 text-center text-xs text-white/80">
           Staff access only. Accounts are created by an existing administrator.
         </p>
+
+        <div className="mt-8 flex justify-center">
+          <PoweredBy />
+        </div>
       </div>
     </main>
   );
