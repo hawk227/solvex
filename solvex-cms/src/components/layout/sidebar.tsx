@@ -39,6 +39,14 @@ type Item = {
  * touched twice a year. Each entry still declares the module it needs; hiding is
  * a convenience, the page and action guards are the control.
  */
+/** Sits above the groups, with no heading: it is the landing page, not a category. */
+const DASHBOARD: Item = {
+  href: '/admin/dashboard',
+  label: 'Dashboard',
+  icon: LayoutGrid,
+  module: 'analytics',
+};
+
 const GROUPS: { heading: string; items: Item[] }[] = [
   {
     heading: 'Operations',
@@ -60,10 +68,6 @@ const GROUPS: { heading: string; items: Item[] }[] = [
       { href: '/admin/customers', label: 'Customers', icon: Users, module: 'customers' },
       { href: '/admin/referrals', label: 'Referrals', icon: Gift, module: 'referrals' },
     ],
-  },
-  {
-    heading: 'Insights',
-    items: [{ href: '/admin/dashboard', label: 'Dashboard', icon: LayoutGrid, module: 'analytics' }],
   },
   {
     heading: 'Configure',
@@ -107,19 +111,51 @@ export function Sidebar({
     (g) => g.items.length > 0,
   );
 
+  const showDashboard = allowed(DASHBOARD);
+
+  // The logo should never land on a page this employee cannot open, so it points
+  // at the dashboard when they have it and their first available page otherwise.
+  const homeHref = showDashboard
+    ? DASHBOARD.href
+    : (groups[0]?.items[0]?.href ?? '/admin/orders');
+
+  const itemClass = (active: boolean) =>
+    cn(
+      'flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-[13px]',
+      'transition-colors duration-[var(--duration-hover)]',
+      active
+        ? 'bg-[var(--color-primary-tint)]/30 font-medium text-[var(--color-primary)]'
+        : 'text-[var(--color-text)] hover:bg-[var(--color-card)]',
+    );
+
   return (
     <aside
       className="flex h-screen w-[var(--cms-sidebar-width)] shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]"
       aria-label="Main"
     >
       <div className="flex flex-col gap-0.5 px-5 py-4">
-        <Link href="/admin/orders" aria-label="SolveX back-office home">
+        <Link href={homeHref} aria-label="SolveX back-office home">
           <Logo height={30} />
         </Link>
         <span className="text-xs text-[var(--color-muted)]">Back-office</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-2">
+        {showDashboard && (
+          <ul className="mb-3 flex flex-col gap-0.5">
+            <li>
+              <Link
+                href={DASHBOARD.href}
+                aria-current={pathname === DASHBOARD.href ? 'page' : undefined}
+                className={itemClass(pathname === DASHBOARD.href)}
+              >
+                <DASHBOARD.icon aria-hidden className="h-4 w-4 shrink-0" />
+                <span className="flex-1">{DASHBOARD.label}</span>
+              </Link>
+            </li>
+          </ul>
+        )}
+
         {groups.map((group) => (
           <div key={group.heading} className="mb-3">
             <p className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wide text-[var(--color-muted)]">
@@ -134,13 +170,7 @@ export function Sidebar({
                     <Link
                       href={href}
                       aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        'flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-[13px]',
-                        'transition-colors duration-[var(--duration-hover)]',
-                        active
-                          ? 'bg-[var(--color-primary-tint)]/30 font-medium text-[var(--color-primary)]'
-                          : 'text-[var(--color-text)] hover:bg-[var(--color-card)]',
-                      )}
+                      className={itemClass(active)}
                     >
                       <Icon aria-hidden className="h-4 w-4 shrink-0" />
                       <span className="flex-1">{label}</span>
