@@ -5,7 +5,7 @@ import { db, imageUrl } from '@/lib/cf';
 import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
-import { ImageUpload } from '@/components/ui/image-upload';
+import { ImageIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
 import { CategoryForm } from './category-form';
@@ -69,14 +69,19 @@ export default async function CategoriesPage() {
                 {rows.map((row) => (
                   <Tr key={row.id}>
                     <Td>
-                      <ImageUpload
-                        target="categories"
-                        id={row.id}
-                        imageUrl={imageUrl(row.imageKey)}
-                        label={row.name}
-                        compact
-                        readOnly={!editable}
-                      />
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+                        {imageUrl(row.imageKey) ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={imageUrl(row.imageKey)!}
+                            alt=""
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon aria-hidden className="h-4 w-4 text-[var(--color-muted)]" />
+                        )}
+                      </div>
                     </Td>
                     <Td>
                       <div className="font-medium">{row.name}</div>
@@ -121,6 +126,7 @@ export default async function CategoriesPage() {
                                 name: row.name,
                                 description: row.description,
                                 sort: row.sort,
+                                imageUrl: imageUrl(row.imageKey),
                               }}
                             />
                           </>

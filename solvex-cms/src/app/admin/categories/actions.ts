@@ -8,7 +8,7 @@ import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
 import { optionalText } from '@/lib/form';
 
-export type ActionResult = { ok: true } | { ok: false; error: string };
+export type ActionResult = { ok: true; id?: number } | { ok: false; error: string };
 
 const CategoryInput = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters.').max(80),
@@ -37,10 +37,13 @@ export async function createCategory(formData: FormData): Promise<ActionResult> 
   const slug = slugify(name);
   if (!slug) return { ok: false, error: 'Name must contain at least one letter or number.' };
 
+  let id: number | undefined;
   try {
-    await db()
+    const [row] = await db()
       .insert(schema.categories)
-      .values({ slug, name, description: description || null, sort });
+      .values({ slug, name, description: description || null, sort })
+      .returning({ id: schema.categories.id });
+    id = row?.id;
   } catch (err) {
     if (isUniqueViolation(err, 'categories.slug')) {
       return { ok: false, error: `A category with the slug "${slug}" already exists.` };
@@ -49,7 +52,7 @@ export async function createCategory(formData: FormData): Promise<ActionResult> 
   }
 
   revalidatePath('/admin/categories');
-  return { ok: true };
+  return { ok: true, id };
 }
 
 export async function updateCategory(id: number, formData: FormData): Promise<ActionResult> {

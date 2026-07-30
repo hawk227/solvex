@@ -9,6 +9,7 @@ export type CmsEnv = {
   DB: D1Database;
   ASSETS_BUCKET: R2Bucket;
   CDN_BASE_URL: string;
+  NEXTJS_ENV?: string;
 };
 
 function env(): CmsEnv {
@@ -30,8 +31,17 @@ export function cdnBaseUrl(): string {
   return env().CDN_BASE_URL;
 }
 
-/** Public URL for an R2 object key, or null when no image is set. */
+/**
+ * Public URL for an R2 object key, or null when no image is set.
+ *
+ * Outside production this points at a local route that reads the binding
+ * directly: uploads in development land in Miniflare's R2, which the real CDN
+ * host knows nothing about, so every preview would appear broken.
+ */
 export function imageUrl(key: string | null | undefined): string | null {
   if (!key) return null;
+  if (env().NEXTJS_ENV !== 'production') {
+    return `/api/image/${key.split('/').map(encodeURIComponent).join('/')}`;
+  }
   return `${cdnBaseUrl().replace(/\/$/, '')}/${key}`;
 }
