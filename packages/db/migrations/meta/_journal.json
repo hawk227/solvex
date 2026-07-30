@@ -50,6 +50,20 @@
       "when": 1785345008108,
       "tag": "0006_stiff_post",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1785402492246,
+      "tag": "0007_green_stellaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1785402518991,
+      "tag": "0008_lying_maestro",
+      "breakpoints": true
     }
   ]
 }

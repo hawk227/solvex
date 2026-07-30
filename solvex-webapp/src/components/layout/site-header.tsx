@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Container } from './container';
 import { MobileNav } from './mobile-nav';
+import { HeaderAuth } from './header-auth';
 
 const LINKS = [
   { href: '/services', label: 'All Services' },
@@ -10,6 +10,11 @@ const LINKS = [
   { href: '/contact', label: 'Contact' },
 ] as const;
 
+/**
+ * Stays a static server component. The session-dependent piece is HeaderAuth, a
+ * client component — reading the session here would make every page dynamic,
+ * including the static marketing pages.
+ */
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-background)]">
@@ -35,12 +40,7 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button asChild variant="outline" className="hidden sm:inline-flex">
-              <Link href="/login">Log in</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/signup">Sign up</Link>
-            </Button>
+            <HeaderAuth />
             <MobileNav links={LINKS} />
           </div>
         </div>

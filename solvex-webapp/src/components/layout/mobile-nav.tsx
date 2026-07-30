@@ -5,6 +5,7 @@ import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSession } from '@/lib/auth-client';
 
 /**
  * Mobile menu. Radix Dialog supplies the focus trap, Escape handling and scroll
@@ -12,6 +13,8 @@ import { Button } from '@/components/ui/button';
  */
 export function MobileNav({ links }: { links: readonly { href: string; label: string }[] }) {
   const [open, setOpen] = useState(false);
+  const { data } = useSession();
+  const signedIn = Boolean(data?.user);
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -48,16 +51,26 @@ export function MobileNav({ links }: { links: readonly { href: string; label: st
           </nav>
 
           <div className="mt-auto flex flex-col gap-2">
-            <Button asChild variant="outline">
-              <Link href="/login" onClick={() => setOpen(false)}>
-                Log in
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href="/signup" onClick={() => setOpen(false)}>
-                Sign up
-              </Link>
-            </Button>
+            {signedIn ? (
+              <Button asChild variant="outline">
+                <Link href="/account" onClick={() => setOpen(false)}>
+                  Your account
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild variant="outline">
+                  <Link href="/login" onClick={() => setOpen(false)}>
+                    Log in
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/signup" onClick={() => setOpen(false)}>
+                    Sign up
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </Dialog.Content>
       </Dialog.Portal>
