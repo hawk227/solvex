@@ -19,13 +19,13 @@
  */
 export const SITE = {
   name: 'SolveX',
-  legalName: 'SolveX', // NEEDS REAL VALUE — registered trading name
-  url: 'https://solvex-webapp.long-lab-43ff.workers.dev', // NEEDS REAL VALUE — your own domain
+  legalName: 'SolveX', // NEEDS REAL VALUE — registered trading name as filed
+  url: 'https://solvex.ltd',
   description:
     'Book AC, refrigerator, oven and washing machine servicing in Dhaka. Vetted technicians, fixed prices, pay cash after the job.',
 
   telephone: '+880 0000 000000', // NEEDS REAL VALUE
-  email: 'hello@solvex.example', // NEEDS REAL VALUE
+  email: 'hello@solvex.ltd', // NEEDS REAL VALUE — confirm this mailbox exists
 
   address: {
     street: 'NEEDS REAL VALUE', // e.g. 'House 12, Road 5, Dhanmondi'

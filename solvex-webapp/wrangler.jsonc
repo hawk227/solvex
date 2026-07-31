@@ -22,11 +22,18 @@
       "migrations_dir": "../packages/db/migrations-audit"
     }
   ],
+  // Custom domains. The website owns the root so the public site gets the
+  // strongest domain; www is served too rather than redirected, and the
+  // canonical tag in the app decides which one search engines index.
+  "routes": [
+    { "pattern": "solvex.ltd", "custom_domain": true },
+    { "pattern": "www.solvex.ltd", "custom_domain": true }
+  ],
   "vars": {
     // Deployed workers are production. Without this the code that branches on
     // it silently took the development path in production — transactional email
     // was logged instead of sent, and images routed through the Worker.
     "NEXTJS_ENV": "production",
-    "CDN_BASE_URL": "https://pub-8eb424560a9d48c8a3c365d020301024.r2.dev"
+    "CDN_BASE_URL": "https://cdn.solvex.ltd"
   }
 }

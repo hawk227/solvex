@@ -28,11 +28,17 @@
       "bucket_name": "solvex-assets"
     }
   ],
+  // The back office is deliberately on its own subdomain: separate cookie
+  // scope from the customer site, and no chance of an admin route being
+  // reachable from the public domain.
+  "routes": [
+    { "pattern": "backoffice.solvex.ltd", "custom_domain": true }
+  ],
   "vars": {
     // Deployed workers are production. Without this the code that branches on
     // it silently took the development path in production — transactional email
     // was logged instead of sent, and images routed through the Worker.
     "NEXTJS_ENV": "production",
-    "CDN_BASE_URL": "https://pub-8eb424560a9d48c8a3c365d020301024.r2.dev"
+    "CDN_BASE_URL": "https://cdn.solvex.ltd"
   }
 }
