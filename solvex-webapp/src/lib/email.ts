@@ -35,7 +35,13 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
   const from = env.EMAIL_FROM ?? 'no-reply@solvex.example';
 
   if (!accountId || !token) {
-    if (env.NEXTJS_ENV === 'production') {
+    // NODE_ENV, not the NEXTJS_ENV binding: Next sets NODE_ENV to
+    // 'development' under `next dev` and 'production' in a build, in both
+    // cases without anything needing to be configured. The previous test was
+    // `env.NEXTJS_ENV === 'production'`, and that var was set nowhere — so a
+    // deployed Worker took the development path, logging the verification code
+    // to the console instead of emailing it while still reporting success.
+    if (process.env.NODE_ENV !== 'development') {
       throw new Error(
         'Email is not configured (CF_ACCOUNT_ID / CF_EMAIL_API_TOKEN). Refusing to silently drop a transactional email.',
       );
