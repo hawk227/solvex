@@ -1,5 +1,16 @@
 import Link from 'next/link';
-import { AirVent, Refrigerator, Microwave, WashingMachine, Wrench } from 'lucide-react';
+import {
+  AirVent,
+  Refrigerator,
+  Microwave,
+  WashingMachine,
+  Tv,
+  Droplets,
+  Flame,
+  Fan,
+  CookingPot,
+  Wrench,
+} from 'lucide-react';
 import { Container } from '@/components/layout/container';
 
 export type RailCategory = {
@@ -23,6 +34,14 @@ const ICONS: Record<string, typeof Wrench> = {
   microwave: Microwave,
   'washing-machine': WashingMachine,
   washer: WashingMachine,
+  television: Tv,
+  tv: Tv,
+  'water-purifier': Droplets,
+  geyser: Flame,
+  'water-heater': Flame,
+  'air-cooler': Fan,
+  'kitchen-hood': CookingPot,
+  dishwasher: CookingPot,
 };
 
 /**

@@ -47,12 +47,15 @@ export function SiteFooter() {
               <h2 className="mb-3 text-[var(--web-font-size-small)] font-bold uppercase tracking-wide text-[var(--color-text)]">
                 {column.title}
               </h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col">
                 {column.links.map((link) => (
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
-                      className="text-[var(--web-font-size-small)] text-[var(--color-muted)] transition-colors duration-[var(--duration-hover)] hover:text-[var(--color-primary)]"
+                      // min-h-11 (44px): footer links were 20px tall, below the
+                      // minimum for a reliable tap on a phone, and this is a
+                      // mobile-first market.
+                      className="inline-flex min-h-11 items-center text-[var(--web-font-size-small)] text-[var(--color-muted)] transition-colors duration-[var(--duration-hover)] hover:text-[var(--color-primary)]"
                     >
                       {link.label}
                     </Link>

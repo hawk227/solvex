@@ -8,6 +8,9 @@ import { PriceSelector } from './price-selector';
 import { proseParagraphs } from '@solvex/db';
 import { getServiceBySlug, getServicePrices, getServiceVariables } from '@/lib/catalog';
 import { formatDuration, formatTaka } from '@/lib/format';
+import { JsonLd } from '@/components/json-ld';
+import { getActiveAreas } from '@/lib/catalog';
+import { breadcrumbJsonLd, faqJsonLd, serviceJsonLd } from '@/lib/structured-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +33,8 @@ export default async function ServiceDetailPage({ params }: PageProps<'/services
   const service = await getServiceBySlug(slug);
   if (!service) notFound();
 
-  const [groups, prices] = await Promise.all([
+  const [areas, groups, prices] = await Promise.all([
+    getActiveAreas(),
     getServiceVariables(service.id),
     getServicePrices(service.id),
   ]);
@@ -41,6 +45,29 @@ export default async function ServiceDetailPage({ params }: PageProps<'/services
 
   return (
     <main className="flex-1">
+      {/*
+        The FAQs below are the highest-value markup on the site: real questions
+        with real answers, which is exactly what an answer engine quotes.
+        Emitted only from FAQs that are visibly on the page.
+      */}
+      <JsonLd
+        data={serviceJsonLd({
+          name: service.name,
+          description: service.shortDesc ?? service.name,
+          slug,
+          categoryName: service.categoryName,
+          price: prices.length > 0 ? Math.min(...prices.map((p) => p.price)) : null,
+          areas: areas.map((a) => a.name),
+        })}
+      />
+      <JsonLd data={faqJsonLd(faqs)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'Home', path: '/' },
+          { name: 'Services', path: '/services' },
+          { name: service.name, path: `/services/${slug}` },
+        ])}
+      />
       <Section className="!pb-0">
         <Container>
           <nav aria-label="Breadcrumb" className="mb-4">

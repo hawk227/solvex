@@ -8,6 +8,8 @@ import { WhyChooseUs } from '@/components/home/why-choose-us';
 import { ServiceCard } from '@/components/ui/service-card';
 import { Button } from '@/components/ui/button';
 import { getActiveAreas, getRailCategories, getServices } from '@/lib/catalog';
+import { JsonLd } from '@/components/json-ld';
+import { howToBookJsonLd, localBusinessJsonLd } from '@/lib/structured-data';
 
 // Reads D1 at request time; there is no binding during the build, so this
 // segment must not be prerendered. Cache at the edge later if load demands it.
@@ -22,6 +24,9 @@ export default async function HomePage() {
 
   return (
     <main className="flex-1">
+      {/* The business, and the neighbourhoods it serves. */}
+      <JsonLd data={localBusinessJsonLd(areas.map((a) => a.name))} />
+      <JsonLd data={howToBookJsonLd()} />
       <Hero areas={areas} />
       <CategoryRail categories={categories} />
 

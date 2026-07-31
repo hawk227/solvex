@@ -38,7 +38,10 @@ export async function getRailCategories(): Promise<RailCategory[]> {
     name: row.name,
     imageUrl: imageUrl(row.imageKey),
     serviceCount: Number(row.serviceCount ?? 0),
-  }));
+  }))
+    // A category with nothing bookable in it is a dead end for the customer
+    // and a thin page for a crawler. Hidden until it has a service.
+    .filter((category) => category.serviceCount > 0);
 }
 
 function serviceSelection() {
