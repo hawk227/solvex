@@ -1,4 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { otpHtml, passwordResetHtml } from './email-template';
 
 /**
  * The single place email leaves this app.
@@ -18,6 +19,11 @@ export type EmailMessage = {
   to: string;
   subject: string;
   text: string;
+  /**
+   * Optional. Always sent alongside `text`, never instead of it — some people
+   * read mail as plain text, and an HTML-only message is itself a spam signal.
+   */
+  html?: string;
 };
 
 type EmailEnv = {
@@ -60,6 +66,7 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
       to: [message.to],
       subject: message.subject,
       text: message.text,
+      ...(message.html ? { html: message.html } : {}),
     }),
   });
 
@@ -72,9 +79,10 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
   }
 }
 
-export function otpEmail(code: string): Pick<EmailMessage, 'subject' | 'text'> {
+export function otpEmail(code: string): Pick<EmailMessage, 'subject' | 'text' | 'html'> {
   return {
     subject: `${code} is your SolveX verification code`,
+    html: otpHtml(code),
     text: [
       `Your SolveX verification code is ${code}.`,
       '',
@@ -83,9 +91,10 @@ export function otpEmail(code: string): Pick<EmailMessage, 'subject' | 'text'> {
   };
 }
 
-export function passwordResetEmail(code: string): Pick<EmailMessage, 'subject' | 'text'> {
+export function passwordResetEmail(code: string): Pick<EmailMessage, 'subject' | 'text' | 'html'> {
   return {
     subject: `${code} is your SolveX password reset code`,
+    html: passwordResetHtml(code),
     text: [
       `Use the code ${code} to reset your SolveX password.`,
       '',
