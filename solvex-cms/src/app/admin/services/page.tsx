@@ -1,12 +1,13 @@
 import Link from 'next/link';
-import { asc, eq } from 'drizzle-orm';
-import { schema, servicePriceCount, variableGroupCount } from '@solvex/db';
+import { and, asc, eq } from 'drizzle-orm';
+import { schema, servicePriceCount, variableGroupCount, notDeleted } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ActiveToggle } from '@/components/ui/active-toggle';
+import { DeleteButton } from '@/components/ui/delete-button';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
 import { ServiceForm } from './service-form';
 import { setServiceActive } from './actions';
@@ -22,6 +23,7 @@ export default async function ServicesPage() {
     d
       .select({ id: schema.categories.id, name: schema.categories.name })
       .from(schema.categories)
+      .where(notDeleted(schema.categories))
       .orderBy(asc(schema.categories.sort), asc(schema.categories.name)),
     d
       .select({
@@ -43,6 +45,8 @@ export default async function ServicesPage() {
       })
       .from(schema.services)
       .innerJoin(schema.categories, eq(schema.categories.id, schema.services.categoryId))
+      // A service under a deleted category disappears with it.
+      .where(and(notDeleted(schema.services), notDeleted(schema.categories)))
       .orderBy(asc(schema.categories.sort), asc(schema.services.sort), asc(schema.services.name)),
   ]);
 
@@ -170,6 +174,9 @@ export default async function ServicesPage() {
                             sort: row.sort,
                           }}
                         />
+                        {editable && (
+                          <DeleteButton kind="service" id={row.id} label={row.name} />
+                        )}
                       </div>
                     </Td>
                   </Tr>

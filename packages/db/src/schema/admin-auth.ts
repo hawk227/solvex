@@ -27,6 +27,15 @@ export const adminUser = sqliteTable('admin_user', {
 
   /** Employees are deactivated, never deleted, so past actions stay attributable. */
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
+  /**
+   * Soft delete. NULL means present; a timestamp means removed.
+   *
+   * Distinct from `active`, which means "paused and will come back".
+   * Deleting keeps the row so orders, tickets and the audit log continue to
+   * name something real — and so the trail of what existed survives.
+   */
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+  deletedBy: text('deleted_by'),
 
   /** Set when an owner issues a temporary password. Blocks every guarded route. */
   mustChangePassword: integer('must_change_password', { mode: 'boolean' })

@@ -27,6 +27,15 @@ export const technicians = sqliteTable(
     joinedOn: text('joined_on'),
     notes: text('notes'),
     active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /**
+     * Soft delete. NULL means present; a timestamp means removed.
+     *
+     * Distinct from `active`, which means "paused and will come back".
+     * Deleting keeps the row so orders, tickets and the audit log continue to
+     * name something real — and so the trail of what existed survives.
+     */
+    deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+    deletedBy: text('deleted_by'),
     createdAt: integer('created_at', { mode: 'timestamp_ms' })
       .notNull()
       .$defaultFn(() => new Date()),

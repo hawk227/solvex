@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { asc, count, eq } from 'drizzle-orm';
-import { schema } from '@solvex/db';
+import { schema, notDeleted } from '@solvex/db';
 import { db, imageUrl } from '@/lib/cf';
 import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
 import { CategoryForm } from './category-form';
 import { ActiveToggle } from '@/components/ui/active-toggle';
+import { DeleteButton } from '@/components/ui/delete-button';
 import { setCategoryActive } from './actions';
 
 export const metadata = { title: 'Categories — SolveX Admin' };
@@ -30,6 +31,7 @@ export default async function CategoriesPage() {
       services: count(schema.services.id),
     })
     .from(schema.categories)
+    .where(notDeleted(schema.categories))
     .leftJoin(schema.services, eq(schema.services.categoryId, schema.categories.id))
     .groupBy(schema.categories.id)
     .orderBy(asc(schema.categories.sort), asc(schema.categories.name));
@@ -128,6 +130,12 @@ export default async function CategoriesPage() {
                                 sort: row.sort,
                                 imageUrl: imageUrl(row.imageKey),
                               }}
+                            />
+                            <DeleteButton
+                              kind="category"
+                              id={row.id}
+                              label={row.name}
+                              extraWarning="Services under this category will disappear from the back office and the website too."
                             />
                           </>
                         ) : (

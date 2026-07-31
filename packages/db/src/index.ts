@@ -31,3 +31,4 @@ export * from "./permissions";
 export * from "./tickets";
 // Separate database, separate binding — see src/audit.ts.
 export * from "./audit";
+export * from "./soft-delete";

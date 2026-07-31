@@ -11,6 +11,15 @@ export const categories = sqliteTable('categories', {
   imageKey: text('image_key'),
   sort: integer('sort').notNull().default(0),
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
+  /**
+   * Soft delete. NULL means present; a timestamp means removed.
+   *
+   * Distinct from `active`, which means "paused and will come back".
+   * Deleting keeps the row so orders, tickets and the audit log continue to
+   * name something real — and so the trail of what existed survives.
+   */
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+  deletedBy: text('deleted_by'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -30,6 +39,15 @@ export const services = sqliteTable(
     durationMin: integer('duration_min'),
     sort: integer('sort').notNull().default(0),
     active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /**
+     * Soft delete. NULL means present; a timestamp means removed.
+     *
+     * Distinct from `active`, which means "paused and will come back".
+     * Deleting keeps the row so orders, tickets and the audit log continue to
+     * name something real — and so the trail of what existed survives.
+     */
+    deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+    deletedBy: text('deleted_by'),
     aboutMd: text('about_md'),
     includedJson: text('included_json', { mode: 'json' }).$type<string[]>(),
     notIncludedJson: text('not_included_json', { mode: 'json' }).$type<string[]>(),

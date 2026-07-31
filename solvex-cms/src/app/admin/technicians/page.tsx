@@ -1,11 +1,12 @@
 import { asc, eq, sql } from 'drizzle-orm';
-import { schema } from '@solvex/db';
+import { schema, notDeleted } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ActiveToggle } from '@/components/ui/active-toggle';
+import { DeleteButton } from '@/components/ui/delete-button';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
 import { formatBdMobile } from '@/lib/phone';
 import { TechnicianForm } from './technician-form';
@@ -45,6 +46,7 @@ export default async function TechniciansPage() {
         doneJobs,
       })
       .from(schema.technicians)
+      .where(notDeleted(schema.technicians))
       .orderBy(asc(schema.technicians.fullName)),
     d
       .select({ id: schema.categories.id, name: schema.categories.name })
@@ -194,6 +196,14 @@ export default async function TechniciansPage() {
                               areaIds: covered.map((a) => a.id),
                             }}
                           />
+                          {editable && (
+                            <DeleteButton
+                              kind="technician"
+                              id={row.id}
+                              label={row.fullName}
+                              extraWarning="Orders they already attended keep showing their name."
+                            />
+                          )}
                         </div>
                       </Td>
                     </Tr>

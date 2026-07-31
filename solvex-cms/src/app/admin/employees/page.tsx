@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { asc } from 'drizzle-orm';
-import { PERMISSION_MODULES, schema } from '@solvex/db';
+import { PERMISSION_MODULES, schema, notDeleted } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireOwner } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
+import { DeleteButton } from '@/components/ui/delete-button';
 import { formatDateTime } from '@/lib/format';
 import { NewEmployeeForm } from './new-employee-form';
 
@@ -28,6 +29,7 @@ export default async function EmployeesPage() {
         lastLoginAt: schema.adminUser.lastLoginAt,
       })
       .from(schema.adminUser)
+      .where(notDeleted(schema.adminUser))
       .orderBy(asc(schema.adminUser.name)),
     d.select().from(schema.adminPermissions),
   ]);
@@ -128,12 +130,20 @@ export default async function EmployeesPage() {
                           Cannot edit yourself
                         </span>
                       ) : (
-                        <Link
-                          href={`/admin/employees/${row.id}`}
-                          className="text-[13px] text-[var(--color-primary)] hover:underline"
-                        >
-                          Manage access →
-                        </Link>
+                        <div className="flex items-center justify-end gap-3">
+                          <Link
+                            href={`/admin/employees/${row.id}`}
+                            className="text-[13px] text-[var(--color-primary)] hover:underline"
+                          >
+                            Manage access →
+                          </Link>
+                          <DeleteButton
+                            kind="employee"
+                            id={row.id}
+                            label={row.name}
+                            extraWarning="They are signed out immediately and cannot sign in again. Tickets and orders they handled keep their name."
+                          />
+                        </div>
                       )}
                     </Td>
                   </Tr>
