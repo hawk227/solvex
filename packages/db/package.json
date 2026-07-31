@@ -18,12 +18,15 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "db:studio:local": "wrangler d1 execute solvex-db --local --persist-to ../../.wrangler/state --command",
-    "db:demo:local": "wrangler d1 execute solvex-db --local --persist-to ../../.wrangler/state --file=./src/demo-seed.sql",
+    "db:demo:local": "wrangler d1 execute solvex-db --local --persist-to ../../.wrangler/state --file=./src/demo-data.sql",
     "audit:generate": "drizzle-kit generate --config drizzle.audit.config.ts",
     "audit:migrate:local": "wrangler d1 migrations apply solvex-audit --local --persist-to ../../.wrangler/state",
     "audit:migrate:remote": "wrangler d1 migrations apply solvex-audit --remote",
     "audit:studio:local": "wrangler d1 execute solvex-audit --local --persist-to ../../.wrangler/state --command",
-    "db:status": "node scripts/db-status.mjs"
+    "db:status": "node scripts/db-status.mjs",
+    "db:demo:remote": "wrangler d1 execute solvex-db --remote --file=./src/demo-data.sql",
+    "db:demo:remove:local": "wrangler d1 execute solvex-db --local --persist-to ../../.wrangler/state --file=./src/demo-data-remove.sql",
+    "db:demo:remove:remote": "wrangler d1 execute solvex-db --remote --file=./src/demo-data-remove.sql"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2"
