@@ -3,17 +3,15 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 /**
  * The single place email leaves this app.
  *
- * Sends through the Cloudflare Email Service `send_email` binding. An earlier
- * version of this file used the REST API instead, on the grounds that the
- * binding required importing `cloudflare:email` — a platform module OpenNext's
- * esbuild pass cannot resolve. That is no longer true: the binding takes a
- * plain object and needs no import, so the REST path bought nothing and cost an
- * API token, two secrets, and a token rotation to remember.
+ * Sends through Resend. Cloudflare Email Service was the previous transport and
+ * turned out to be a paid product; Resend's free tier covers the volume this
+ * business will start at, and the swap is contained entirely in this file —
+ * which is the reason sending was funnelled through one function to begin with.
  *
- * Without a binding (local dev, or before the domain is onboarded) the message
- * is logged instead of sent, so signup stays testable end to end. That fallback
- * is DEV ONLY — in production a missing binding throws, because silently not
- * sending a verification code is worse than failing loudly.
+ * Without an API key (local dev, or before the key is set) the message is
+ * logged instead of sent, so signup stays testable end to end. That fallback is
+ * DEV ONLY — in production a missing key throws, because a verification code
+ * that was never sent must not look like it was.
  */
 
 export type EmailMessage = {
@@ -23,48 +21,55 @@ export type EmailMessage = {
 };
 
 type EmailEnv = {
-  /** Cloudflare Email Service binding. Absent in local dev. */
-  EMAIL?: {
-    send(message: {
-      to: string;
-      from: { email: string; name?: string };
-      subject: string;
-      text: string;
-      html?: string;
-    }): Promise<unknown>;
-  };
-  /** Sender address. Must be on a domain onboarded to Email Sending. */
+  RESEND_API_KEY?: string;
+  /**
+   * Sender address. Must be on a domain verified in Resend, or sending is
+   * rejected for anyone but your own account address.
+   */
   EMAIL_FROM?: string;
-  NEXTJS_ENV?: string;
 };
 
 export async function sendEmail(message: EmailMessage): Promise<void> {
   const env = getCloudflareContext().env as unknown as EmailEnv;
-  const from = env.EMAIL_FROM ?? 'support@solvex.ltd';
+  const apiKey = env.RESEND_API_KEY;
+  const from = env.EMAIL_FROM ?? 'SolveX <support@solvex.ltd>';
 
-  if (!env.EMAIL) {
-    // NODE_ENV, not a binding: Next sets it to 'development' under `next dev`
-    // and 'production' in a build, in both cases with nothing to configure. An
-    // earlier version keyed this on a var that was set nowhere, so a deployed
-    // Worker took the development path and logged verification codes to the
-    // console instead of emailing them, while still reporting success.
+  if (!apiKey) {
+    // NODE_ENV, not a Cloudflare var: Next sets it to 'development' under
+    // `next dev` and 'production' in a build, in both cases with nothing to
+    // configure. An earlier version keyed this on a var that was set nowhere,
+    // so a deployed Worker took the development path and logged verification
+    // codes to the console while still reporting success.
     if (process.env.NODE_ENV !== 'development') {
       throw new Error(
-        'Email Service binding (EMAIL) is missing. Refusing to silently drop a transactional email.',
+        'RESEND_API_KEY is not set. Refusing to silently drop a transactional email.',
       );
     }
     console.info(`[email:dev] to=${message.to} subject="${message.subject}"\n${message.text}`);
     return;
   }
 
-  // Any throw propagates. A verification code that was never sent must not look
-  // like it was.
-  await env.EMAIL.send({
-    to: message.to,
-    from: { email: from, name: 'SolveX' },
-    subject: message.subject,
-    text: message.text,
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      from,
+      to: [message.to],
+      subject: message.subject,
+      text: message.text,
+    }),
   });
+
+  if (!response.ok) {
+    // Resend puts the actual reason in the body — an unverified domain and a
+    // bad key both surface as 4xx, and the difference is the whole diagnosis.
+    // Truncated so a long HTML error page cannot flood the logs.
+    const detail = await response.text().catch(() => '');
+    throw new Error(`Resend send failed (${response.status}): ${detail.slice(0, 300)}`);
+  }
 }
 
 export function otpEmail(code: string): Pick<EmailMessage, 'subject' | 'text'> {

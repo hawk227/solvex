@@ -29,15 +29,12 @@
     { "pattern": "solvex.ltd", "custom_domain": true },
     { "pattern": "www.solvex.ltd", "custom_domain": true }
   ],
-  // Transactional email. The binding needs no API token; the sender domain
-  // must be onboarded with `wrangler email sending enable solvex.ltd`.
-  "send_email": [{ "name": "EMAIL" }],
   "vars": {
     // Deployed workers are production. Without this the code that branches on
     // it silently took the development path in production — transactional email
     // was logged instead of sent, and images routed through the Worker.
     "NEXTJS_ENV": "production",
-    "EMAIL_FROM": "support@solvex.ltd",
+    "EMAIL_FROM": "SolveX <support@solvex.ltd>",
     "CDN_BASE_URL": "https://cdn.solvex.ltd"
   }
 }
