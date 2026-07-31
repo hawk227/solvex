@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Create an account' };
 
 export default async function SignupPage({ searchParams }: PageProps<'/signup'>) {
-  if (await getCustomer()) redirect('/account');
+  if (await getCustomer()) redirect('/dashboard');
 
   const params = await searchParams;
   const ref = Array.isArray(params.ref) ? params.ref[0] : params.ref;

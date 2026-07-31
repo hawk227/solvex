@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Container, Section } from '@/components/layout/container';
+import { AccountNav } from '@/components/layout/account-nav';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { requireCustomer } from '@/lib/session';
@@ -15,6 +16,7 @@ export default async function OrdersPage() {
 
   return (
     <main className="flex-1">
+      <AccountNav />
       <Section>
         <Container>
           <h1 className="text-3xl font-semibold text-[var(--color-text)] md:text-4xl">

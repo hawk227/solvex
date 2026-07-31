@@ -9,8 +9,8 @@ import { signIn } from '@/lib/auth-client';
 
 /** Only same-origin paths are accepted, so ?next= cannot become an open redirect. */
 function safeNext(next: string | null): string {
-  if (!next) return '/account';
-  if (!next.startsWith('/') || next.startsWith('//')) return '/account';
+  if (!next) return '/dashboard';
+  if (!next.startsWith('/') || next.startsWith('//')) return '/dashboard';
   return next;
 }
 
