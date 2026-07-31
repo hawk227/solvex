@@ -1,5 +1,5 @@
 import { and, asc, eq, like, or } from 'drizzle-orm';
-import { activeServiceCount, minServicePrice, schema } from '@solvex/db';
+import { activeServiceCount, minCategoryPrice, minServicePrice, schema } from '@solvex/db';
 import { db, imageUrl } from './cf';
 import type { ServiceCardData } from '@/components/ui/service-card';
 import type { RailCategory } from '@/components/home/category-rail';
@@ -27,6 +27,7 @@ export async function getRailCategories(): Promise<RailCategory[]> {
       name: schema.categories.name,
       imageKey: schema.categories.imageKey,
       serviceCount: activeServiceCount,
+      fromPrice: minCategoryPrice,
     })
     .from(schema.categories)
     .where(eq(schema.categories.active, true))
@@ -38,6 +39,7 @@ export async function getRailCategories(): Promise<RailCategory[]> {
     name: row.name,
     imageUrl: imageUrl(row.imageKey),
     serviceCount: Number(row.serviceCount ?? 0),
+    fromPrice: row.fromPrice === null ? null : Number(row.fromPrice),
   }))
     // A category with nothing bookable in it is a dead end for the customer
     // and a thin page for a crawler. Hidden until it has a service.

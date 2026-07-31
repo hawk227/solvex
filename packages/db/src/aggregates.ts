@@ -23,6 +23,22 @@ export const minServicePrice = sql<number | null>`(
   WHERE service_prices.service_id = services.id
 )`;
 
+/**
+ * Cheapest bookable price anywhere in a category, or NULL if nothing is priced.
+ *
+ * For the homepage, where "from ৳800" tells a customer something they can act
+ * on and "3 services" tells them about our catalog. Only active services count:
+ * quoting a price a customer cannot then book is worse than quoting none.
+ */
+export const minCategoryPrice = sql<number | null>`(
+  SELECT MIN(service_prices.price)
+    FROM service_prices
+    JOIN services ON services.id = service_prices.service_id
+   WHERE services.category_id = categories.id
+     AND services.active = 1
+     AND services.deleted_at IS NULL
+)`;
+
 /** How many combinations have a price. Zero means the service is not bookable. */
 export const servicePriceCount = sql<number>`(
   SELECT count(*) FROM service_prices
