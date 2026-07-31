@@ -3,16 +3,16 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 /**
  * The single place email leaves this app.
  *
- * Uses the Cloudflare Email Service REST API rather than the Workers
- * `send_email` binding. Two reasons:
- *   1. the binding requires importing `cloudflare:email`, a platform module
- *      OpenNext's esbuild pass cannot resolve;
- *   2. the REST payload is the same shape most providers use, so swapping to
- *      Resend really is an edit to this one file.
+ * Sends through the Cloudflare Email Service `send_email` binding. An earlier
+ * version of this file used the REST API instead, on the grounds that the
+ * binding required importing `cloudflare:email` — a platform module OpenNext's
+ * esbuild pass cannot resolve. That is no longer true: the binding takes a
+ * plain object and needs no import, so the REST path bought nothing and cost an
+ * API token, two secrets, and a token rotation to remember.
  *
- * Without credentials (local dev, or before the domain is onboarded) the message
- * is logged instead of sent, so signup is testable end to end. That fallback is
- * DEV ONLY — in production a missing credential throws, because silently not
+ * Without a binding (local dev, or before the domain is onboarded) the message
+ * is logged instead of sent, so signup stays testable end to end. That fallback
+ * is DEV ONLY — in production a missing binding throws, because silently not
  * sending a verification code is worse than failing loudly.
  */
 
@@ -23,59 +23,50 @@ export type EmailMessage = {
 };
 
 type EmailEnv = {
-  CF_ACCOUNT_ID?: string;
-  CF_EMAIL_API_TOKEN?: string;
+  /** Cloudflare Email Service binding. Absent in local dev. */
+  EMAIL?: {
+    send(message: {
+      to: string;
+      from: { email: string; name?: string };
+      subject: string;
+      text: string;
+      html?: string;
+    }): Promise<unknown>;
+  };
+  /** Sender address. Must be on a domain onboarded to Email Sending. */
   EMAIL_FROM?: string;
   NEXTJS_ENV?: string;
 };
 
 export async function sendEmail(message: EmailMessage): Promise<void> {
   const env = getCloudflareContext().env as unknown as EmailEnv;
-  const { CF_ACCOUNT_ID: accountId, CF_EMAIL_API_TOKEN: token } = env;
-  const from = env.EMAIL_FROM ?? 'no-reply@solvex.example';
+  const from = env.EMAIL_FROM ?? 'support@solvex.ltd';
 
-  if (!accountId || !token) {
-    // NODE_ENV, not the NEXTJS_ENV binding: Next sets NODE_ENV to
-    // 'development' under `next dev` and 'production' in a build, in both
-    // cases without anything needing to be configured. The previous test was
-    // `env.NEXTJS_ENV === 'production'`, and that var was set nowhere — so a
-    // deployed Worker took the development path, logging the verification code
-    // to the console instead of emailing it while still reporting success.
+  if (!env.EMAIL) {
+    // NODE_ENV, not a binding: Next sets it to 'development' under `next dev`
+    // and 'production' in a build, in both cases with nothing to configure. An
+    // earlier version keyed this on a var that was set nowhere, so a deployed
+    // Worker took the development path and logged verification codes to the
+    // console instead of emailing them, while still reporting success.
     if (process.env.NODE_ENV !== 'development') {
       throw new Error(
-        'Email is not configured (CF_ACCOUNT_ID / CF_EMAIL_API_TOKEN). Refusing to silently drop a transactional email.',
+        'Email Service binding (EMAIL) is missing. Refusing to silently drop a transactional email.',
       );
     }
     console.info(`[email:dev] to=${message.to} subject="${message.subject}"\n${message.text}`);
     return;
   }
 
-  const response = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/send`,
-    {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        from,
-        to: message.to,
-        subject: message.subject,
-        text: message.text,
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    // The body carries the machine-readable reason; include it so a
-    // deliverability problem is diagnosable from logs rather than invisible.
-    const detail = await response.text().catch(() => '');
-    throw new Error(`Email send failed (${response.status}): ${detail.slice(0, 300)}`);
-  }
+  // Any throw propagates. A verification code that was never sent must not look
+  // like it was.
+  await env.EMAIL.send({
+    to: message.to,
+    from: { email: from, name: 'SolveX' },
+    subject: message.subject,
+    text: message.text,
+  });
 }
 
-/** Verification code email. Kept short: it is read on a phone lock screen. */
 export function otpEmail(code: string): Pick<EmailMessage, 'subject' | 'text'> {
   return {
     subject: `${code} is your SolveX verification code`,
