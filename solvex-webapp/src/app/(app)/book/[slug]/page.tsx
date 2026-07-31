@@ -16,14 +16,18 @@ export async function generateMetadata({ params }: PageProps<'/book/[slug]'>) {
 }
 
 /**
- * Next 14 bookable dates.
+ * The bookable window: today plus 60 days.
+ *
+ * Was 14 days, which suited the fortnight-wide strip this replaced. A month
+ * calendar showing mostly greyed-out dates reads as broken, and someone
+ * arranging around a holiday or a trip needs to reach further than two weeks.
  *
  * Dates are resolved in Asia/Dhaka, not in the server's timezone — a Worker in
  * another region would otherwise offer "today" a day out for a Dhaka customer.
  */
 function upcomingDates(): { value: string; weekday: string; day: string; month: string }[] {
   const now = Date.now();
-  return Array.from({ length: 14 }, (_, i) => {
+  return Array.from({ length: 61 }, (_, i) => {
     const d = new Date(now + i * 86_400_000);
     const tz = { timeZone: 'Asia/Dhaka' } as const;
     return {

@@ -9,6 +9,7 @@ import { formatTaka } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { fetchAvailability } from './availability-action';
 import { submitBooking } from './actions';
+import { Calendar } from '@/components/ui/calendar';
 
 type Group = { id: number; name: string; options: { id: number; label: string }[] };
 type DateOption = { value: string; weekday: string; day: string; month: string };
@@ -103,7 +104,7 @@ export function BookingForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-8 lg:grid-cols-[1fr_360px]">
+    <form onSubmit={onSubmit} className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
       <input type="hidden" name="serviceId" value={serviceId} />
       <input type="hidden" name="optionIds" value={optionIds.join(',')} />
       <input type="hidden" name="scheduledDate" value={date} />
@@ -155,28 +156,13 @@ export function BookingForm({
 
         <section>
           <h2 className="text-xl font-bold text-[var(--color-text)]">Pick a date</h2>
-          <div className="rail mt-4 flex gap-2 overflow-x-auto pb-1">
-            {dates.map((d) => {
-              const active = d.value === date;
-              return (
-                <button
-                  key={d.value}
-                  type="button"
-                  onClick={() => changeDate(d.value)}
-                  aria-pressed={active}
-                  className={cn(
-                    'flex w-16 shrink-0 flex-col items-center rounded-[var(--radius-md)] border py-2 transition-colors duration-[var(--duration-hover)]',
-                    active
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-                      : 'border-[var(--color-border)] hover:border-[var(--color-primary)]',
-                  )}
-                >
-                  <span className="text-[var(--web-font-size-caption)]">{d.weekday}</span>
-                  <span className="text-lg font-bold leading-tight">{d.day}</span>
-                  <span className="text-[var(--web-font-size-caption)]">{d.month}</span>
-                </button>
-              );
-            })}
+          <div className="mt-4 max-w-md">
+            <Calendar
+              value={date}
+              min={dates[0]!.value}
+              max={dates[dates.length - 1]!.value}
+              onSelect={changeDate}
+            />
           </div>
         </section>
 
@@ -252,7 +238,7 @@ export function BookingForm({
         </Field>
       </div>
 
-      <aside className="lg:sticky lg:top-[calc(var(--web-header-height)+1.5rem)] lg:self-start">
+      <aside className="xl:sticky xl:top-6 xl:self-start">
         <div className="rounded-[var(--web-card-radius)] border border-[var(--color-border)] p-6">
           <h2 className="font-bold text-[var(--color-text)]">Summary</h2>
 
