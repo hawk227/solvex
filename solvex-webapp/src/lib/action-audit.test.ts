@@ -17,7 +17,7 @@ const APP = path.join(import.meta.dirname, '..', 'app');
  * in the log, so nothing that mutates should ever be added here.
  */
 const EXEMPT: Record<string, string> = {
-  'book/[slug]/availability-action.ts → fetchAvailability':
+  '(site)/book/[slug]/availability-action.ts → fetchAvailability':
     'read-only; fires on every date change and would bury real entries',
 };
 

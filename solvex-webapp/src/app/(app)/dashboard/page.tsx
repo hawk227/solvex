@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, CalendarDays, Clock, LifeBuoy, MapPin, Plus, Wallet } from 'lucide-react';
 import { Container, Section } from '@/components/layout/container';
-import { AccountNav } from '@/components/layout/account-nav';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getDashboard } from '@/lib/dashboard';
@@ -23,7 +22,6 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex-1">
-      <AccountNav />
 
       <Section>
         <Container>

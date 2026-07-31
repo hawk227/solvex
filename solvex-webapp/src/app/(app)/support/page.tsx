@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { listCustomerTickets } from '@solvex/db';
 import { Container, Section } from '@/components/layout/container';
-import { AccountNav } from '@/components/layout/account-nav';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/cf';
@@ -18,7 +17,6 @@ export default async function SupportPage() {
 
   return (
     <main className="flex-1">
-      <AccountNav />
       <Section>
         <Container>
           <div className="flex flex-wrap items-center justify-between gap-4">

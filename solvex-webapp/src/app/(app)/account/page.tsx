@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { MapPin, Phone, User } from 'lucide-react';
 import { Container, Section } from '@/components/layout/container';
-import { AccountNav } from '@/components/layout/account-nav';
 import { Button } from '@/components/ui/button';
 import { getActiveAreas } from '@/lib/catalog';
 import { getReferralSummary, listMyReferrals } from '@/lib/referrals';
@@ -26,7 +25,6 @@ export default async function AccountPage() {
 
   return (
     <main className="flex-1">
-      <AccountNav />
       <Section>
         <Container>
           <h1 className="text-3xl font-semibold text-[var(--color-text)] md:text-4xl">

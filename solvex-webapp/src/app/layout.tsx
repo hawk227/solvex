@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
-import { SiteHeader } from '@/components/layout/site-header';
-import { SiteFooter } from '@/components/layout/site-footer';
 import { JsonLd } from '@/components/json-ld';
 import { SITE } from '@/lib/site-config';
 import { websiteJsonLd } from '@/lib/structured-data';
@@ -52,9 +50,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="flex min-h-full flex-col antialiased">
         {/* Site-level identity, on every page so crawlers always resolve it. */}
         <JsonLd data={websiteJsonLd()} />
-        <SiteHeader />
         {children}
-        <SiteFooter />
       </body>
     </html>
   );
