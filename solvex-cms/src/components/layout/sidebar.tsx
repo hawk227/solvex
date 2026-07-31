@@ -165,7 +165,9 @@ export function Sidebar({
 
   return (
     <aside
-      className="flex h-screen w-[var(--cms-sidebar-width)] shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]"
+      // sticky rather than fixed: it stays in the flex row, so the content
+      // beside it needs no compensating margin and can never slide under it.
+      className="sticky top-0 self-start flex h-screen w-[var(--cms-sidebar-width)] shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]"
       aria-label="Main"
     >
       <div className="flex flex-col gap-0.5 px-5 py-4">

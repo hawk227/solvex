@@ -47,7 +47,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar */}
       <aside
         aria-label="Your account"
-        className="hidden w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)] md:flex"
+        // Pinned on desktop so the nav is reachable from anywhere down a long
+        // bookings list. Sticky, not fixed, so it stays in the flex row.
+        className="hidden w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)] md:sticky md:top-0 md:flex md:h-screen md:self-start"
       >
         <div className="px-5 py-5">
           <Link href="/" aria-label="SolveX home">
@@ -65,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-0.5 px-3">
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3">
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = isActive(pathname, href);
             return (
