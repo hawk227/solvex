@@ -122,7 +122,7 @@ export default async function DashboardPage() {
                   Pick a service and a time that suits you. You pay cash once the work is done.
                 </p>
                 <Button asChild className="mt-5">
-                  <Link href="/services">
+                  <Link href="/book">
                     <Plus className="h-4 w-4" />
                     Book a service
                   </Link>

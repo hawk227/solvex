@@ -14,10 +14,22 @@ export type ServiceCardData = {
   fromPrice: number | null;
 };
 
-export function ServiceCard({ service }: { service: ServiceCardData }) {
+export function ServiceCard({
+  service,
+  /**
+   * Where the card goes. Defaults to the public service page, which is what a
+   * visitor still deciding needs. The signed-in booking catalogue overrides it
+   * to go straight to the form — someone who clicked "Book a service" has
+   * already decided, and a marketing page in between is a step backwards.
+   */
+  href,
+}: {
+  service: ServiceCardData;
+  href?: string;
+}) {
   return (
     <article className="group h-full overflow-hidden rounded-[var(--web-card-radius)] border border-[var(--color-border)] bg-[var(--color-card)] transition-shadow duration-[var(--duration-default)] hover:shadow-[var(--shadow-md)]">
-      <Link href={`/services/${service.slug}`} className="flex h-full flex-col">
+      <Link href={href ?? `/services/${service.slug}`} className="flex h-full flex-col">
         <div className="flex aspect-[16/10] items-center justify-center overflow-hidden bg-[var(--color-surface)]">
           {service.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

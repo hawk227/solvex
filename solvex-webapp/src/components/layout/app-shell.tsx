@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <div className="px-3 pb-3">
           <Link
-            href="/services"
+            href="/book"
             className="flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-3 text-[var(--web-font-size-small)] font-semibold text-white transition-colors duration-[var(--duration-hover)] hover:bg-[var(--color-primary-hover)]"
           >
             <Plus aria-hidden className="h-4 w-4" />
@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Logo height={24} />
         </Link>
         <Link
-          href="/services"
+          href="/book"
           className="inline-flex min-h-10 items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-3 text-[var(--web-font-size-small)] font-semibold text-white"
         >
           <Plus aria-hidden className="h-4 w-4" />

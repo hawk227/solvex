@@ -66,10 +66,12 @@ export default async function BookPage({ params, searchParams }: PageProps<'/boo
       <Section>
         <Container>
           <Link
-            href={`/services/${service.slug}`}
+            // Back into the in-app catalogue, not out to the marketing page —
+            // this flow now lives entirely inside the signed-in shell.
+            href="/book"
             className="text-[var(--web-font-size-small)] text-[var(--color-muted)] hover:text-[var(--color-primary)]"
           >
-            ← Back to {service.name}
+            ← All services
           </Link>
 
           <h1 className="mt-3 text-3xl font-semibold text-[var(--color-text)] md:text-4xl">
