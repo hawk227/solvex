@@ -5,6 +5,7 @@ import { MobileNav } from './mobile-nav';
 import { HeaderAuth } from './header-auth';
 import { LanguageSwitcher } from './language-switcher';
 import { getStrings, localePath } from '@/lib/locale';
+import { LOCALE_ROUTING_READY } from '@/lib/i18n';
 
 /**
  * The session-dependent piece is HeaderAuth, a client component: reading the
@@ -43,7 +44,12 @@ export async function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <LanguageSwitcher locale={locale} />
+            {/*
+              Hidden until /bn routes exist. Shipping the switcher now would
+              send every visitor who clicks বাংলা to a 404 — worse than not
+              offering the language at all.
+            */}
+            {LOCALE_ROUTING_READY && <LanguageSwitcher locale={locale} />}
             <HeaderAuth />
             <MobileNav links={LINKS} />
           </div>

@@ -4,12 +4,14 @@ import { Check, Clock, X } from 'lucide-react';
 import { Container, Section } from '@/components/layout/container';
 import { Button } from '@/components/ui/button';
 import { Faqs } from '@/components/ui/faqs';
+import { ServiceCard } from '@/components/ui/service-card';
+import { areaSlug } from '@/lib/site-config';
 import { PriceSelector } from './price-selector';
 import { proseParagraphs } from '@solvex/db';
 import { getServiceBySlug, getServicePrices, getServiceVariables } from '@/lib/catalog';
 import { formatDuration, formatTaka } from '@/lib/format';
 import { JsonLd } from '@/components/json-ld';
-import { getActiveAreas } from '@/lib/catalog';
+import { getActiveAreas, getServices } from '@/lib/catalog';
 import { breadcrumbJsonLd, faqJsonLd, serviceJsonLd } from '@/lib/structured-data';
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +35,8 @@ export default async function ServiceDetailPage({ params }: PageProps<'/services
   const service = await getServiceBySlug(slug);
   if (!service) notFound();
 
-  const [areas, groups, prices] = await Promise.all([
+  const [related, areas, groups, prices] = await Promise.all([
+    getServices({ categorySlug: service.categorySlug }),
     getActiveAreas(),
     getServiceVariables(service.id),
     getServicePrices(service.id),
@@ -205,16 +208,61 @@ export default async function ServiceDetailPage({ params }: PageProps<'/services
         </Container>
       </Section>
 
+      {/*
+        Siblings in the same category. Someone reading "AC Cleaning" and
+        realising they actually need a gas refill previously had nowhere to go
+        but the back button.
+      */}
+      {related.length > 1 && (
+        <Section>
+          <Container>
+            <h2 className="text-xl font-bold text-[var(--color-text)]">
+              Other {service.categoryName.toLowerCase()} services
+            </h2>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {related
+                .filter((other) => other.slug !== slug)
+                .slice(0, 3)
+                .map((other) => (
+                  <ServiceCard key={other.id} service={other} />
+                ))}
+            </div>
+          </Container>
+        </Section>
+      )}
+
+      <Section className="bg-[var(--color-surface)]">
+        <Container>
+          <h2 className="text-xl font-bold text-[var(--color-text)]">
+            {service.name} across Dhaka
+          </h2>
+          <p className="mt-2 max-w-[60ch] text-[var(--color-muted)]">
+            Same price and the same service windows in every area we cover.
+          </p>
+          {/* Also the internal links that make each area page worth indexing. */}
+          <ul className="mt-5 flex flex-wrap gap-2">
+            {areas.map((area) => (
+              <li key={area.id}>
+                <Link
+                  href={`/areas/${areaSlug(area.name)}`}
+                  className="inline-flex min-h-10 items-center rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-[var(--color-card)] px-4 text-[var(--web-font-size-small)] text-[var(--color-text)] transition-colors duration-[var(--duration-hover)] hover:border-[var(--color-primary)]"
+                >
+                  {area.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
+
       <Section>
         <Container>
-          <div className="rounded-[var(--web-card-radius)] bg-[var(--color-surface)] p-6 text-center md:p-10">
-            <h2 className="text-xl font-bold text-[var(--color-text)]">
-              Not sure which service you need?
-            </h2>
-            <p className="mx-auto mt-2 max-w-[52ch] text-[var(--color-muted)]">
+          <div className="rounded-[var(--web-card-radius)] bg-[var(--color-text)] p-6 text-center md:p-10">
+            <h2 className="text-xl font-bold text-white">Not sure which service you need?</h2>
+            <p className="mx-auto mt-2 max-w-[52ch] text-white/80">
               Tell us the appliance and the symptom, and we will point you to the right job.
             </p>
-            <Button asChild size="lg" className="mt-5">
+            <Button asChild size="lg" className="mt-5 bg-white text-[var(--color-text)] hover:bg-white/90">
               <Link href="/contact">Contact us</Link>
             </Button>
           </div>

@@ -20,6 +20,15 @@
  * traffic.
  */
 
+/**
+ * Whether /bn routes actually exist yet.
+ *
+ * The dictionary, switcher and hreflang are all built, but the routing is
+ * blocked (see the commit that added this). Flipping this to true without the
+ * routes would point every switcher click at a 404, so it gates the UI.
+ */
+export const LOCALE_ROUTING_READY = false;
+
 export const LOCALES = ['en', 'bn'] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'en';
