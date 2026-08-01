@@ -5,11 +5,13 @@ import { Hero } from '@/components/home/hero';
 import { CategoryRail } from '@/components/home/category-rail';
 import { HowItWorks } from '@/components/home/how-it-works';
 import { WhyChooseUs } from '@/components/home/why-choose-us';
+import { AreasCovered } from '@/components/home/areas-covered';
+import { HomeFaqs, HOME_FAQS } from '@/components/home/home-faqs';
 import { ServiceCard } from '@/components/ui/service-card';
 import { Button } from '@/components/ui/button';
 import { getActiveAreas, getRailCategories, getServices } from '@/lib/catalog';
 import { JsonLd } from '@/components/json-ld';
-import { howToBookJsonLd, localBusinessJsonLd } from '@/lib/structured-data';
+import { faqJsonLd, howToBookJsonLd, localBusinessJsonLd } from '@/lib/structured-data';
 
 // Reads D1 at request time; there is no binding during the build, so this
 // segment must not be prerendered. Cache at the edge later if load demands it.
@@ -27,6 +29,8 @@ export default async function HomePage() {
       {/* The business, and the neighbourhoods it serves. */}
       <JsonLd data={localBusinessJsonLd(areas.map((a) => a.name))} />
       <JsonLd data={howToBookJsonLd()} />
+      {/* Same questions and answers as render below — never markup-only. */}
+      <JsonLd data={faqJsonLd(HOME_FAQS)} />
       <Hero areas={areas} />
       <CategoryRail categories={categories} />
 
@@ -63,6 +67,8 @@ export default async function HomePage() {
 
       <HowItWorks />
       <WhyChooseUs />
+      <AreasCovered areas={areas} />
+      <HomeFaqs />
 
       <Section className="bg-[var(--color-text)]">
         <Container>

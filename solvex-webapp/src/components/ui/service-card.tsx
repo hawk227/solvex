@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { Clock, ImageIcon } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { formatDuration, formatTaka } from '@/lib/format';
+import { ApplianceVisual } from '@/components/ui/appliance-visual';
 
 export type ServiceCardData = {
   id: number;
@@ -8,6 +9,7 @@ export type ServiceCardData = {
   name: string;
   shortDesc: string | null;
   categoryName: string;
+  categorySlug: string;
   imageUrl: string | null;
   durationMin: number | null;
   /** Lowest configured price, or null when the service is not yet priced. */
@@ -40,7 +42,7 @@ export function ServiceCard({
               className="h-full w-full object-cover transition-transform duration-[var(--duration-default)] group-hover:scale-105"
             />
           ) : (
-            <ImageIcon aria-hidden className="h-8 w-8 text-[var(--color-muted)]" />
+            <ApplianceVisual slug={service.categorySlug} className="h-full w-full" />
           )}
         </div>
 

@@ -68,6 +68,7 @@ type ServiceRow = {
   imageKey: string | null;
   durationMin: number | null;
   categoryName: string;
+  categorySlug: string;
   fromPrice: number | null;
 };
 
@@ -78,6 +79,7 @@ function toCard(row: ServiceRow): ServiceCardData {
     name: row.name,
     shortDesc: row.shortDesc,
     categoryName: row.categoryName,
+    categorySlug: row.categorySlug,
     imageUrl: imageUrl(row.imageKey),
     durationMin: row.durationMin,
     fromPrice: row.fromPrice === null ? null : Number(row.fromPrice),
