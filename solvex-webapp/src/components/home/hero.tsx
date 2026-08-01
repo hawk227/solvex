@@ -39,7 +39,15 @@ export async function Hero({ areas }: { areas: { id: number; name: string }[] })
           </p>
 
           <div className="mt-8">
-            <HeroSearch areas={areas} />
+            <HeroSearch
+              areas={areas}
+              strings={{
+                area: s.hero.area,
+                allAreas: s.hero.allAreas,
+                searchPlaceholder: s.hero.searchPlaceholder,
+                search: s.hero.search,
+              }}
+            />
           </div>
         </div>
       </Container>

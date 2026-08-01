@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Languages } from 'lucide-react';
 import { LOCALE_LABEL, LOCALES, type Locale } from '@/lib/i18n';
 import { cn } from '@/lib/cn';
@@ -14,13 +14,21 @@ import { cn } from '@/lib/cn';
  */
 export function LanguageSwitcher({ locale }: { locale: Locale }) {
   const pathname = usePathname();
-  const router = useRouter();
 
   // usePathname reports the URL the visitor sees, so /bn is still on the front.
   const bare = pathname === '/bn' ? '/' : pathname.replace(/^\/bn(?=\/|$)/, '') || '/';
 
   function switchTo(next: Locale) {
-    router.push(next === 'bn' ? (bare === '/' ? '/bn' : `/bn${bare}`) : bare);
+    const target = next === 'bn' ? (bare === '/' ? '/bn' : `/bn${bare}`) : bare;
+
+    /*
+     * A full load, not router.push. The locale is read from a request header in
+     * the root layout, and a client-side navigation preserves layouts — so
+     * pushing changed the URL while <html lang> and the whole header stayed in
+     * the previous language. Switching language is rare enough that one real
+     * navigation is the right cost for being correct.
+     */
+    window.location.assign(target);
   }
 
   return (
