@@ -7,9 +7,11 @@ import { HowItWorks } from '@/components/home/how-it-works';
 import { WhyChooseUs } from '@/components/home/why-choose-us';
 import { AreasCovered } from '@/components/home/areas-covered';
 import { HomeFaqs, HOME_FAQS } from '@/components/home/home-faqs';
+import { OnTheDay } from '@/components/home/on-the-day';
+import { CapabilityStats } from '@/components/home/capability-stats';
 import { ServiceCard } from '@/components/ui/service-card';
 import { Button } from '@/components/ui/button';
-import { getActiveAreas, getRailCategories, getServices } from '@/lib/catalog';
+import { getActiveAreas, getCapabilityCounts, getRailCategories, getServices } from '@/lib/catalog';
 import { JsonLd } from '@/components/json-ld';
 import { faqJsonLd, howToBookJsonLd, localBusinessJsonLd } from '@/lib/structured-data';
 
@@ -18,10 +20,11 @@ import { faqJsonLd, howToBookJsonLd, localBusinessJsonLd } from '@/lib/structure
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [areas, categories, popular] = await Promise.all([
+  const [areas, categories, popular, counts] = await Promise.all([
     getActiveAreas(),
     getRailCategories(),
     getServices({ limit: 8 }),
+    getCapabilityCounts(),
   ]);
 
   return (
@@ -65,7 +68,13 @@ export default async function HomePage() {
         </Container>
       </Section>
 
+      <CapabilityStats
+        services={counts.services}
+        areas={counts.areas}
+        technicians={counts.technicians}
+      />
       <HowItWorks />
+      <OnTheDay />
       <WhyChooseUs />
       <AreasCovered areas={areas} />
       <HomeFaqs />

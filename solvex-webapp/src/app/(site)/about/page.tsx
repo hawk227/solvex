@@ -37,6 +37,34 @@ export default function AboutPage() {
         </p>
       </ProseSection>
 
+      <ProseSection heading="How technicians are checked">
+        <p>
+          Every technician is identity-verified before they are allowed to take a job, and each one
+          is recorded against the appliance categories and the areas they actually cover — so the
+          person sent to a refrigerator fault is someone who works on refrigerators. Once assigned,
+          their name appears on your booking before they arrive. Nobody turns up unannounced.
+        </p>
+      </ProseSection>
+
+      <ProseSection heading="What we do not do">
+        <p>
+          We are a servicing and repair business, not a parts shop and not an installer. We do not
+          sell appliances, we do not do new installations, and we do not quote for work sight
+          unseen over the phone. Replacement parts and refrigerant gas are charged separately, and
+          the technician confirms the cost with you before fitting anything — if a repair is not
+          worth doing, you will be told that rather than sold it.
+        </p>
+      </ProseSection>
+
+      <ProseSection heading="We are new, and we would rather say so">
+        <p>
+          SolveX is early. We do not have a decade of reviews or a fleet of vans, and you will not
+          find invented numbers on this site claiming otherwise. What we have is a straightforward
+          arrangement: a fixed price you see before booking, a window you choose rather than a
+          promise to come sometime, an identity-checked technician, and no money changing hands
+          until the work is done and you are satisfied with it.
+        </p>
+      </ProseSection>
       <ProseSection heading="Where we work">
         <p>
           We currently serve selected areas of Dhaka. The area list at booking shows where we can

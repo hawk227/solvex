@@ -1,5 +1,5 @@
-import { and, asc, eq, like, or } from 'drizzle-orm';
-import { activeServiceCount, minCategoryPrice, minServicePrice, schema } from '@solvex/db';
+import { and, asc, eq, like, or, sql } from 'drizzle-orm';
+import { activeServiceCount, minCategoryPrice, minServicePrice, notDeleted, schema } from '@solvex/db';
 import { db, imageUrl } from './cf';
 import type { ServiceCardData } from '@/components/ui/service-card';
 import type { RailCategory } from '@/components/home/category-rail';
@@ -182,4 +182,37 @@ export async function getServicePrices(serviceId: number) {
     .select({ comboKey: schema.servicePrices.comboKey, price: schema.servicePrices.price })
     .from(schema.servicePrices)
     .where(eq(schema.servicePrices.serviceId, serviceId));
+}
+
+/**
+ * Counts for the homepage stats band.
+ *
+ * Read live rather than hardcoded, so the band cannot claim ten services the
+ * day someone adds an eleventh. Only active, undeleted rows count — advertising
+ * a technician who has left, or a paused service, would be a false claim.
+ */
+export async function getCapabilityCounts(): Promise<{
+  services: number;
+  areas: number;
+  technicians: number;
+}> {
+  const d = db();
+  const [services] = await d
+    .select({ n: sql<number>`count(*)` })
+    .from(schema.services)
+    .where(and(eq(schema.services.active, true), notDeleted(schema.services)));
+  const [areas] = await d
+    .select({ n: sql<number>`count(*)` })
+    .from(schema.areas)
+    .where(eq(schema.areas.active, true));
+  const [technicians] = await d
+    .select({ n: sql<number>`count(*)` })
+    .from(schema.technicians)
+    .where(and(eq(schema.technicians.active, true), notDeleted(schema.technicians)));
+
+  return {
+    services: Number(services?.n ?? 0),
+    areas: Number(areas?.n ?? 0),
+    technicians: Number(technicians?.n ?? 0),
+  };
 }
