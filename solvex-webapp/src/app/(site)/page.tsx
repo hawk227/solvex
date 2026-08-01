@@ -9,6 +9,7 @@ import { AreasCovered } from '@/components/home/areas-covered';
 import { HomeFaqs, HOME_FAQS } from '@/components/home/home-faqs';
 import { OnTheDay } from '@/components/home/on-the-day';
 import { CapabilityStats } from '@/components/home/capability-stats';
+import { Showcase } from '@/components/home/showcase';
 import { ServiceCard } from '@/components/ui/service-card';
 import { Button } from '@/components/ui/button';
 import { getActiveAreas, getCapabilityCounts, getRailCategories, getServices } from '@/lib/catalog';
@@ -75,6 +76,7 @@ export default async function HomePage() {
       />
       <HowItWorks />
       <OnTheDay />
+      <Showcase />
       <WhyChooseUs />
       <AreasCovered areas={areas} />
       <HomeFaqs />
