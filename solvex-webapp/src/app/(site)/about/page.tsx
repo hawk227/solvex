@@ -1,4 +1,12 @@
-import { ProsePage, ProseSection } from '@/components/layout/prose-page';
+import Link from 'next/link';
+import { Ban, BadgeCheck, CalendarClock, Receipt, Wallet } from 'lucide-react';
+import { Container, Section } from '@/components/layout/container';
+import { Button } from '@/components/ui/button';
+import { BlueprintAc, BlueprintFridge, BlueprintWasher } from '@/components/ui/blueprint';
+import { getActiveAreas, getCapabilityCounts } from '@/lib/catalog';
+import { areaSlug } from '@/lib/site-config';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'About us',
@@ -6,71 +14,247 @@ export const metadata = {
     'SolveX brings vetted appliance technicians to your door in Dhaka, with prices agreed before the work starts.',
 };
 
-export default function AboutPage() {
+/**
+ * Previously seven identical heading-and-paragraph blocks in a narrow column —
+ * a document rather than a page, with half the viewport empty beside it.
+ *
+ * Rebuilt around the one argument this business actually has: getting an
+ * appliance fixed is normally opaque, and every step here is the opposite of
+ * that. The argument is strongest as a direct comparison, so it gets a
+ * side-by-side instead of two buried paragraphs, and each section afterwards
+ * changes treatment so the eye has somewhere to go.
+ *
+ * Counts come from the database rather than the copy, so the page cannot claim
+ * ten services the day someone adds an eleventh.
+ */
+
+const PRINCIPLES = [
+  {
+    icon: Receipt,
+    title: 'The price is decided before we arrive',
+    body: 'Set per appliance specification — a 2 ton split and a 1 ton window unit are not quoted the same. You see the figure for your exact selection before you book, and it does not move afterwards.',
+  },
+  {
+    icon: CalendarClock,
+    title: 'You choose the window, not us',
+    body: 'Morning, midday or afternoon. The booking page shows only windows that still have room, so anything you can pick is genuinely available — no waiting in all day for a van that might come.',
+  },
+  {
+    icon: BadgeCheck,
+    title: 'You know who is coming',
+    body: 'Every technician is identity-verified before taking a job, and recorded against the categories and areas they actually cover. Their name appears on your booking once assigned.',
+  },
+  {
+    icon: Wallet,
+    title: 'Money changes hands last',
+    body: 'Nothing is charged online. You pay cash once the work is finished and you are satisfied with it — the only moment either side can honestly judge the job.',
+  },
+];
+
+const NOT_US = [
+  'We do not sell appliances',
+  'We do not do new installations',
+  'We do not quote sight unseen over the phone',
+  'We do not fit parts without telling you the cost first',
+];
+
+export default async function AboutPage() {
+  const [areas, counts] = await Promise.all([getActiveAreas(), getCapabilityCounts()]);
+
   return (
-    <ProsePage
-      title="About SolveX"
-      intro="We bring vetted appliance technicians to your door in Dhaka, with the price agreed before the work starts."
-    >
-      <ProseSection heading="Why we exist">
-        <p>
-          Getting an appliance fixed usually means calling a number someone gave you, waiting
-          without a time, and finding out the cost once the work is already done. SolveX replaces
-          that with a booking you can see: a fixed price for your exact appliance, a service window
-          you choose, and a technician who has been identity-checked.
-        </p>
-      </ProseSection>
+    <main className="flex-1">
+      {/* An opening statement, not a paragraph. */}
+      <Section className="!pb-10">
+        <Container>
+          <p className="text-[var(--web-font-size-caption)] font-bold uppercase tracking-wide text-[var(--color-primary)]">
+            About SolveX
+          </p>
+          <h1 className="mt-3 max-w-[18ch] text-4xl font-semibold leading-[1.08] tracking-tight text-[var(--color-text)] md:text-6xl">
+            Appliance repair without the guesswork.
+          </h1>
+          <p className="mt-6 max-w-[56ch] text-lg leading-relaxed text-[var(--color-muted)]">
+            {counts.services} services, {counts.technicians} identity-checked technicians and{' '}
+            {counts.areas} areas of Dhaka — with the price agreed before anyone touches your
+            appliance.
+          </p>
+        </Container>
+      </Section>
 
-      <ProseSection heading="What we service">
-        <p>
-          Air conditioners, refrigerators, ovens and washing machines — cleaning, servicing, health
-          checks and repairs. Every service page lists exactly what is covered and what is not, so
-          there is nothing to negotiate at your door.
-        </p>
-      </ProseSection>
+      {/*
+        The contrast is the argument. Side by side it lands in seconds; as two
+        paragraphs it sat in the middle of a wall of text nobody finished.
+      */}
+      <Section className="!pt-10">
+        <Container>
+          <div className="grid overflow-hidden rounded-[var(--web-card-radius)] border border-[var(--color-border)] md:grid-cols-2">
+            <div className="bg-[var(--color-surface)] p-7 md:p-10">
+              <p className="text-[var(--web-font-size-caption)] font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                The usual way
+              </p>
+              <ul className="mt-5 flex flex-col gap-4 text-[var(--color-muted)]">
+                <li>You call a number someone gave you.</li>
+                <li>Someone comes at some point, or does not.</li>
+                <li>The appliance is opened up.</li>
+                <li>You are told the cost once the work is already done.</li>
+              </ul>
+            </div>
 
-      <ProseSection heading="How we charge">
-        <p>
-          Prices are set per appliance specification, so a 2 ton split unit and a 1 ton window unit
-          are not quoted the same. You see the price for your selection before you book, and you pay
-          the technician in cash once the job is finished. Nothing is charged online.
-        </p>
-      </ProseSection>
+            <div className="bg-[var(--color-text)] p-7 text-white md:p-10">
+              <p className="text-[var(--web-font-size-caption)] font-bold uppercase tracking-wide text-white/60">
+                Booking with us
+              </p>
+              <ul className="mt-5 flex flex-col gap-4">
+                <li>You see the price for your exact appliance.</li>
+                <li>You pick a date and a three-hour window.</li>
+                <li>You are told who is coming before they arrive.</li>
+                <li>You pay in cash, after, once you are happy.</li>
+              </ul>
+            </div>
+          </div>
+        </Container>
+      </Section>
 
-      <ProseSection heading="How technicians are checked">
-        <p>
-          Every technician is identity-verified before they are allowed to take a job, and each one
-          is recorded against the appliance categories and the areas they actually cover — so the
-          person sent to a refrigerator fault is someone who works on refrigerators. Once assigned,
-          their name appears on your booking before they arrive. Nobody turns up unannounced.
-        </p>
-      </ProseSection>
+      <Section>
+        <Container>
+          <h2 className="max-w-[22ch] text-2xl font-semibold text-[var(--color-text)] md:text-3xl">
+            Four things we decided at the start
+          </h2>
 
-      <ProseSection heading="What we do not do">
-        <p>
-          We are a servicing and repair business, not a parts shop and not an installer. We do not
-          sell appliances, we do not do new installations, and we do not quote for work sight
-          unseen over the phone. Replacement parts and refrigerant gas are charged separately, and
-          the technician confirms the cost with you before fitting anything — if a repair is not
-          worth doing, you will be told that rather than sold it.
-        </p>
-      </ProseSection>
+          <div className="mt-8 grid gap-x-10 gap-y-8 md:grid-cols-2">
+            {PRINCIPLES.map(({ icon: Icon, title, body }) => (
+              <div key={title} className="flex gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-primary-tint)]/30">
+                  <Icon aria-hidden className="h-5 w-5 text-[var(--color-primary)]" />
+                </span>
+                <div>
+                  <h3 className="font-semibold text-[var(--color-text)]">{title}</h3>
+                  <p className="mt-1.5 text-[var(--web-font-size-small)] leading-relaxed text-[var(--color-muted)]">
+                    {body}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </Section>
 
-      <ProseSection heading="We are new, and we would rather say so">
-        <p>
-          SolveX is early. We do not have a decade of reviews or a fleet of vans, and you will not
-          find invented numbers on this site claiming otherwise. What we have is a straightforward
-          arrangement: a fixed price you see before booking, a window you choose rather than a
-          promise to come sometime, an identity-checked technician, and no money changing hands
-          until the work is done and you are satisfied with it.
-        </p>
-      </ProseSection>
-      <ProseSection heading="Where we work">
-        <p>
-          We currently serve selected areas of Dhaka. The area list at booking shows where we can
-          reach today, and it grows as we add technicians.
-        </p>
-      </ProseSection>
-    </ProsePage>
+      <Section className="bg-[var(--color-surface)]">
+        <Container>
+          <div className="grid items-center gap-10 md:grid-cols-2">
+            <div>
+              <h2 className="text-2xl font-semibold text-[var(--color-text)] md:text-3xl">
+                What we work on
+              </h2>
+              <p className="mt-4 max-w-[48ch] leading-relaxed text-[var(--color-muted)]">
+                Air conditioners, refrigerators, washing machines, ovens, televisions, water
+                purifiers and geysers — cleaning, servicing, health checks and repairs. Every
+                service page lists exactly what is covered and what is not, so there is nothing
+                left to negotiate at your door.
+              </p>
+              <Button asChild className="mt-6">
+                <Link href="/services">See all {counts.services} services</Link>
+              </Button>
+            </div>
+
+            {/* Drawn, not photographed — see blueprint.tsx for why. */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-[var(--radius-md)] bg-[#fff1e8] p-3">
+                <BlueprintAc className="text-[var(--color-primary)]" />
+              </div>
+              <div className="rounded-[var(--radius-md)] bg-[#fdf2f8] p-3">
+                <BlueprintFridge className="text-[var(--color-primary)]" />
+              </div>
+              <div className="rounded-[var(--radius-md)] bg-[#eef2ff] p-3">
+                <BlueprintWasher className="text-[var(--color-primary)]" />
+              </div>
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      <Section>
+        <Container>
+          <div className="grid gap-10 md:grid-cols-2">
+            <div>
+              <h2 className="text-2xl font-semibold text-[var(--color-text)] md:text-3xl">
+                What we are not
+              </h2>
+              <p className="mt-4 max-w-[46ch] leading-relaxed text-[var(--color-muted)]">
+                Being clear about the edges is part of the same promise. If a repair is not worth
+                doing, you will be told that rather than sold it.
+              </p>
+            </div>
+
+            <ul className="flex flex-col gap-3">
+              {NOT_US.map((item) => (
+                <li
+                  key={item}
+                  className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-3.5"
+                >
+                  <Ban aria-hidden className="h-4 w-4 shrink-0 text-[var(--color-muted)]" />
+                  <span className="text-[var(--web-font-size-small)] text-[var(--color-text)]">
+                    {item}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Container>
+      </Section>
+
+      {/*
+        The most distinctive claim on this site is that there is no claim.
+        Given pull-quote weight because saying it plainly is the point — every
+        competitor implies a history they may not have.
+      */}
+      <Section className="bg-[var(--color-text)]">
+        <Container>
+          <blockquote className="mx-auto max-w-[36ch] text-center">
+            <p className="text-2xl font-semibold leading-snug text-white md:text-4xl md:leading-[1.2]">
+              We are new, and we would rather say so than invent a decade of reviews.
+            </p>
+            <footer className="mx-auto mt-6 max-w-[60ch] text-white/70">
+              No fabricated ratings, no invented order counts. What we have is a fixed price you
+              see before booking, a window you choose, a technician who has been checked, and no
+              money changing hands until the work is done.
+            </footer>
+          </blockquote>
+        </Container>
+      </Section>
+
+      <Section>
+        <Container>
+          <h2 className="text-2xl font-semibold text-[var(--color-text)] md:text-3xl">
+            Where we work
+          </h2>
+          <p className="mt-3 max-w-[56ch] text-[var(--color-muted)]">
+            {counts.areas} areas across Dhaka, at the same prices and the same windows in each. The
+            list grows as technicians come on.
+          </p>
+
+          <ul className="mt-6 flex flex-wrap gap-2">
+            {areas.map((area) => (
+              <li key={area.id}>
+                <Link
+                  href={`/areas/${areaSlug(area.name)}`}
+                  className="inline-flex min-h-11 items-center rounded-[var(--radius-pill)] border border-[var(--color-border)] px-4 text-[var(--web-font-size-small)] text-[var(--color-text)] transition-colors duration-[var(--duration-hover)] hover:border-[var(--color-primary)]"
+                >
+                  {area.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Button asChild size="lg">
+              <Link href="/services">Book a service</Link>
+            </Button>
+            <Button asChild size="lg" variant="secondary">
+              <Link href="/contact">Ask us something</Link>
+            </Button>
+          </div>
+        </Container>
+      </Section>
+    </main>
   );
 }
