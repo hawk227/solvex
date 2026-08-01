@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import { JsonLd } from '@/components/json-ld';
 import { SITE } from '@/lib/site-config';
+import { getLocale } from '@/lib/locale';
 import { websiteJsonLd } from '@/lib/structured-data';
 import './globals.css';
 
@@ -18,7 +19,11 @@ export const metadata: Metadata = {
    * resolve — shared links then preview as bare text.
    */
   metadataBase: new URL(SITE.url),
-  alternates: { canonical: '/' },
+  alternates: {
+    canonical: '/',
+    // Tells search engines the two versions are the same page, not duplicates.
+    languages: { en: '/', bn: '/bn' },
+  },
   title: {
     default: 'SolveX — Appliance servicing at your door in Dhaka',
     template: '%s | SolveX',
@@ -44,9 +49,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // lang must match what is actually rendered, or screen readers pronounce
+  // Bangla with an English voice and search engines mis-detect the page.
+  const locale = await getLocale();
+
   return (
-    <html lang="en" className={`${poppins.variable} h-full`}>
+    <html lang={locale} className={`${poppins.variable} h-full`}>
       <body className="flex min-h-full flex-col antialiased">
         {/* Site-level identity, on every page so crawlers always resolve it. */}
         <JsonLd data={websiteJsonLd()} />

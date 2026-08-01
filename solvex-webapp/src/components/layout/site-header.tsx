@@ -3,20 +3,27 @@ import { LogoLink } from '@/components/ui/logo';
 import Link from 'next/link';
 import { MobileNav } from './mobile-nav';
 import { HeaderAuth } from './header-auth';
-
-const LINKS = [
-  { href: '/services', label: 'All Services' },
-  { href: '/about', label: 'About' },
-  { href: '/referral', label: 'Refer & Earn' },
-  { href: '/contact', label: 'Contact' },
-] as const;
+import { LanguageSwitcher } from './language-switcher';
+import { getStrings, localePath } from '@/lib/locale';
 
 /**
- * Stays a static server component. The session-dependent piece is HeaderAuth, a
- * client component — reading the session here would make every page dynamic,
- * including the static marketing pages.
+ * The session-dependent piece is HeaderAuth, a client component: reading the
+ * session here would be a second reason for every page to be dynamic.
+ *
+ * Reading the locale, however, does make this dynamic. That cost is accepted —
+ * nearly every page already reads the catalogue from D1, and the alternative is
+ * threading a locale prop through the layout into every page.
  */
-export function SiteHeader() {
+export async function SiteHeader() {
+  const { locale, s } = await getStrings();
+
+  const LINKS = [
+    { href: localePath(locale, '/services'), label: s.nav.services },
+    { href: localePath(locale, '/about'), label: s.nav.about },
+    { href: localePath(locale, '/referral'), label: s.nav.referral },
+    { href: localePath(locale, '/contact'), label: s.nav.contact },
+  ];
+
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-background)]">
       <Container>
@@ -36,6 +43,7 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <LanguageSwitcher locale={locale} />
             <HeaderAuth />
             <MobileNav links={LINKS} />
           </div>

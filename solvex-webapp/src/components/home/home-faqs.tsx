@@ -1,5 +1,6 @@
 import { Container, Section } from '@/components/layout/container';
 import { Faqs } from '@/components/ui/faqs';
+import { getStrings } from '@/lib/locale';
 
 /**
  * Questions people actually ask before booking a repair.
@@ -44,16 +45,17 @@ export const HOME_FAQS = [
   },
 ];
 
-export function HomeFaqs() {
+export async function HomeFaqs() {
+  const { s } = await getStrings();
   return (
     <Section>
       <Container className="max-w-3xl">
         <div className="flex flex-col gap-2">
           <p className="text-[var(--web-font-size-caption)] font-bold uppercase tracking-wide text-[var(--color-primary)]">
-            Before you book
+            {s.home.faqEyebrow}
           </p>
           <h2 className="text-2xl font-semibold text-[var(--color-text)] md:text-3xl">
-            Common questions
+            {s.home.faqTitle}
           </h2>
         </div>
 

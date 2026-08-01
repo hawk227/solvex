@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 import { Container, Section } from '@/components/layout/container';
 import { areaSlug } from '@/lib/site-config';
+import { getStrings, localePath } from '@/lib/locale';
+import { t } from '@/lib/i18n';
 
 /**
  * The neighbourhoods, linked to their own pages.
@@ -12,22 +14,22 @@ import { areaSlug } from '@/lib/site-config';
  * orphans, reachable from the sitemap alone, which is a weak signal and no help
  * at all to a person.
  */
-export function AreasCovered({ areas }: { areas: { id: number; name: string }[] }) {
+export async function AreasCovered({ areas }: { areas: { id: number; name: string }[] }) {
   if (areas.length === 0) return null;
+  const { locale, s } = await getStrings();
 
   return (
     <Section className="bg-[var(--color-surface)]">
       <Container>
         <div className="flex flex-col gap-2">
           <p className="text-[var(--web-font-size-caption)] font-bold uppercase tracking-wide text-[var(--color-primary)]">
-            Where we work
+            {s.home.areasEyebrow}
           </p>
           <h2 className="text-2xl font-semibold text-[var(--color-text)] md:text-3xl">
-            Covering {areas.length} areas across Dhaka
+            {t(s.home.areasTitle, { count: areas.length })}
           </h2>
           <p className="max-w-[60ch] text-[var(--color-muted)]">
-            Same prices and the same service windows in every one. Not listed? Tell us where you
-            are — we add areas as technicians come on.
+            {s.home.areasBody}
           </p>
         </div>
 
@@ -35,7 +37,7 @@ export function AreasCovered({ areas }: { areas: { id: number; name: string }[] 
           {areas.map((area) => (
             <li key={area.id}>
               <Link
-                href={`/areas/${areaSlug(area.name)}`}
+                href={localePath(locale, `/areas/${areaSlug(area.name)}`)}
                 className="flex min-h-14 items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card)] px-4 transition-colors duration-[var(--duration-hover)] hover:border-[var(--color-primary)]"
               >
                 <MapPin aria-hidden className="h-4 w-4 shrink-0 text-[var(--color-primary)]" />

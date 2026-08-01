@@ -1,5 +1,6 @@
 import { Container } from '@/components/layout/container';
 import { HeroSearch } from './hero-search';
+import { getStrings } from '@/lib/locale';
 
 /**
  * Hero modelled on the reference site: full-bleed tinted panel, one h1, and an
@@ -14,7 +15,9 @@ import { HeroSearch } from './hero-search';
  * it, and the hero has to reserve that space rather than let the strip sit on
  * top of content.
  */
-export function Hero({ areas }: { areas: { id: number; name: string }[] }) {
+export async function Hero({ areas }: { areas: { id: number; name: string }[] }) {
+  const { s } = await getStrings();
+
   return (
     <div className="relative isolate overflow-hidden bg-[var(--color-text)]">
       <div
@@ -29,11 +32,10 @@ export function Hero({ areas }: { areas: { id: number; name: string }[] }) {
         */}
         <div className="pb-28 pt-16 text-center md:pb-32 md:pt-24">
           <h1 className="mx-auto max-w-[24ch] text-3xl font-semibold leading-tight text-white sm:text-4xl md:text-5xl lg:text-[56px]">
-            Appliance experts at your door
+            {s.hero.title}
           </h1>
           <p className="mx-auto mt-4 max-w-[52ch] text-white/85 md:text-lg">
-            AC, fridge, oven and washing machine servicing across Dhaka. Fixed prices, vetted
-            technicians, pay cash after the job.
+            {s.hero.subtitle}
           </p>
 
           <div className="mt-8">
