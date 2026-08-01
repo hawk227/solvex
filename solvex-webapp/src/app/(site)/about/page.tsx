@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Ban, BadgeCheck, CalendarClock, Receipt, Wallet } from 'lucide-react';
+import { BadgeCheck, CalendarClock, Receipt, Wallet } from 'lucide-react';
 import { Container, Section } from '@/components/layout/container';
 import { Button } from '@/components/ui/button';
 import { BlueprintAc, BlueprintFridge, BlueprintWasher } from '@/components/ui/blueprint';
@@ -51,12 +51,6 @@ const PRINCIPLES = [
   },
 ];
 
-const NOT_US = [
-  'We do not sell appliances',
-  'We do not do new installations',
-  'We do not quote sight unseen over the phone',
-  'We do not fit parts without telling you the cost first',
-];
 
 export default async function AboutPage() {
   const [areas, counts] = await Promise.all([getActiveAreas(), getCapabilityCounts()]);
@@ -169,56 +163,6 @@ export default async function AboutPage() {
               </div>
             </div>
           </div>
-        </Container>
-      </Section>
-
-      <Section>
-        <Container>
-          <div className="grid gap-10 md:grid-cols-2">
-            <div>
-              <h2 className="text-2xl font-semibold text-[var(--color-text)] md:text-3xl">
-                What we are not
-              </h2>
-              <p className="mt-4 max-w-[46ch] leading-relaxed text-[var(--color-muted)]">
-                Being clear about the edges is part of the same promise. If a repair is not worth
-                doing, you will be told that rather than sold it.
-              </p>
-            </div>
-
-            <ul className="flex flex-col gap-3">
-              {NOT_US.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-3.5"
-                >
-                  <Ban aria-hidden className="h-4 w-4 shrink-0 text-[var(--color-muted)]" />
-                  <span className="text-[var(--web-font-size-small)] text-[var(--color-text)]">
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Container>
-      </Section>
-
-      {/*
-        The most distinctive claim on this site is that there is no claim.
-        Given pull-quote weight because saying it plainly is the point — every
-        competitor implies a history they may not have.
-      */}
-      <Section className="bg-[var(--color-text)]">
-        <Container>
-          <blockquote className="mx-auto max-w-[36ch] text-center">
-            <p className="text-2xl font-semibold leading-snug text-white md:text-4xl md:leading-[1.2]">
-              We are new, and we would rather say so than invent a decade of reviews.
-            </p>
-            <footer className="mx-auto mt-6 max-w-[60ch] text-white/70">
-              No fabricated ratings, no invented order counts. What we have is a fixed price you
-              see before booking, a window you choose, a technician who has been checked, and no
-              money changing hands until the work is done.
-            </footer>
-          </blockquote>
         </Container>
       </Section>
 
