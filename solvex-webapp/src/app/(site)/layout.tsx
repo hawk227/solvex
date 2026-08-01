@@ -1,5 +1,6 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
+import { CookieNotice } from '@/components/layout/cookie-notice';
 
 /**
  * The public site: marketing pages, the catalog, and the auth screens.
@@ -14,6 +15,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <SiteHeader />
       {children}
       <SiteFooter />
+      <CookieNotice />
     </>
   );
 }
