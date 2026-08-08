@@ -145,6 +145,11 @@ export async function placeOrder(db: Db, input: PlaceOrderInput): Promise<PlaceO
     .limit(1);
   if (!slot) return { ok: false, reason: 'slot-unavailable' };
 
+  // Computed before any money moves: buildComboKey throws on duplicate option
+  // ids, and that must happen before reserveCredit ever debits the ledger —
+  // otherwise a rejected combo leaves an orphaned credit debit with no order.
+  const comboKey = buildComboKey(input.optionIds);
+
   // The price comes from the matrix for the exact combination — never from
   // input — UNLESS an admin has explicitly overridden it (priceOverride).
   let basePrice: number;
@@ -171,8 +176,6 @@ export async function placeOrder(db: Db, input: PlaceOrderInput): Promise<PlaceO
   );
   const creditApplied = reservation?.amount ?? 0;
   const total = basePrice - creditApplied;
-
-  const comboKey = buildComboKey(input.optionIds);
 
   // Retry only on a code collision, which is a fresh random value each time.
   let orderId: number | null = null;
