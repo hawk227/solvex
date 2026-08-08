@@ -129,3 +129,34 @@ export const variableOptionsRelations = relations(variableOptions, ({ one }) => 
 export const servicePricesRelations = relations(servicePrices, ({ one }) => ({
   service: one(services, { fields: [servicePrices.serviceId], references: [services.id] }),
 }));
+
+/**
+ * Internal delivery-cost data for a service: material, tools, technician
+ * count, resource/travel cost, service time, and a technician SOP. None of
+ * this is customer-facing — `services`/`service_prices` (what the booking
+ * flow and public site actually read) are untouched by this table.
+ */
+export const serviceCosting = sqliteTable('service_costing', {
+  serviceId: integer('service_id')
+    .primaryKey()
+    .references(() => services.id, { onDelete: 'cascade' }),
+  material: text('material'),
+  tools: text('tools'),
+  // Text, not integer: some source values are ranges ("2/3"), not counts.
+  resourceCount: text('resource_count'),
+  resourceCost: integer('resource_cost'),
+  // The source's raw string ("1.30 H", "6 to 24 H", "30 min"), kept
+  // verbatim since some are ranges that don't reduce to one number.
+  // services.durationMin is filled separately where a clean value exists.
+  serviceTimeLabel: text('service_time_label'),
+  travelCost: integer('travel_cost'),
+  // What it costs Solvex to deliver — distinct from services/service_prices,
+  // which is what the customer pays. CMS-only; never read by the public site.
+  internalCost: integer('internal_cost'),
+  // Technician-facing step-by-step instructions. Null for most services.
+  sopMd: text('sop_md'),
+});
+
+export const serviceCostingRelations = relations(serviceCosting, ({ one }) => ({
+  service: one(services, { fields: [serviceCosting.serviceId], references: [services.id] }),
+}));
