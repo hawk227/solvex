@@ -65,6 +65,16 @@ export type PlaceOrderInput = {
   /** How much account credit the customer asked to use. Capped server-side. */
   requestedCredit: number;
   notes: string | null;
+  /**
+   * Admin-set price, bypassing the catalog matrix entirely. Only ever set by
+   * the CMS's `createOrderForCustomer` action, behind `requireManage('orders')`
+   * — see the "Trust boundary" section of
+   * docs/superpowers/specs/2026-08-08-cms-order-creation-design.md. Never set
+   * this from a customer-facing code path.
+   */
+  priceOverride?: number;
+  /** The CMS employee who placed this order, if any. Written onto the initial order event. */
+  placedByAdminId?: string;
 };
 
 export type PlaceOrderResult =
@@ -135,13 +145,18 @@ export async function placeOrder(db: Db, input: PlaceOrderInput): Promise<PlaceO
     .limit(1);
   if (!slot) return { ok: false, reason: 'slot-unavailable' };
 
-  // The price comes from the matrix for the exact combination — never from input.
+  // The price comes from the matrix for the exact combination — never from
+  // input — UNLESS an admin has explicitly overridden it (priceOverride).
   let basePrice: number;
-  try {
-    basePrice = await lookupPrice(db, input.serviceId, input.optionIds);
-  } catch (err) {
-    if (err instanceof PriceNotFoundError) return { ok: false, reason: 'not-priced' };
-    throw err;
+  if (input.priceOverride !== undefined) {
+    basePrice = input.priceOverride;
+  } else {
+    try {
+      basePrice = await lookupPrice(db, input.serviceId, input.optionIds);
+    } catch (err) {
+      if (err instanceof PriceNotFoundError) return { ok: false, reason: 'not-priced' };
+      throw err;
+    }
   }
 
   // Credit is RESERVED before the order is created, with a conditional insert
@@ -210,6 +225,7 @@ export async function placeOrder(db: Db, input: PlaceOrderInput): Promise<PlaceO
     orderId,
     status: 'PENDING',
     note: 'Order placed',
+    adminId: input.placedByAdminId ?? null,
   });
 
   return { ok: true, orderId, code, basePrice, creditApplied, total };

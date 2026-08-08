@@ -258,6 +258,42 @@ describe('placeOrder', () => {
     });
     await expect(getCreditBalance(f.db, f.userId)).resolves.toBe(500);
   });
+
+  it('uses priceOverride instead of the catalog price when provided', async () => {
+    const f = await fixture({ price: 1500 });
+    const result = await placeOrder(f.db, input(f, { priceOverride: 700 }));
+    expect(result).toMatchObject({ ok: true, basePrice: 700, total: 700 });
+  });
+
+  it('accepts priceOverride even when the combination has no catalog price', async () => {
+    const f = await fixture();
+    const result = await placeOrder(f.db, input(f, { priceOverride: 500 }));
+    expect(result).toMatchObject({ ok: true, basePrice: 500, total: 500 });
+  });
+
+  it('writes placedByAdminId onto the initial order event', async () => {
+    const f = await fixture({ price: 1000 });
+    const result = await placeOrder(f.db, input(f, { placedByAdminId: 'admin_123' }));
+    if (!result.ok) throw new Error('expected success');
+
+    const [event] = await f.db
+      .select()
+      .from(schema.orderEvents)
+      .where(eq(schema.orderEvents.orderId, result.orderId));
+    expect(event).toMatchObject({ adminId: 'admin_123' });
+  });
+
+  it('leaves adminId null when placedByAdminId is not given', async () => {
+    const f = await fixture({ price: 1000 });
+    const result = await placeOrder(f.db, input(f));
+    if (!result.ok) throw new Error('expected success');
+
+    const [event] = await f.db
+      .select()
+      .from(schema.orderEvents)
+      .where(eq(schema.orderEvents.orderId, result.orderId));
+    expect(event!.adminId).toBeNull();
+  });
 });
 
 describe('getAvailability', () => {
