@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema, isUniqueViolation } from '@solvex/db';
 import { db } from '@/lib/cf';
@@ -20,6 +20,17 @@ const ProfileInput = z.object({
     .refine((v): v is string => v !== null, 'Enter a Bangladeshi mobile number, e.g. 01712345678.'),
   address: z.string().trim().min(10, 'Please give enough detail for a technician to find you.').max(300),
   areaId: z.coerce.number().int().positive('Choose your area.'),
+  // Handles all three shapes FormData can hand back for this field: '' from
+  // an unselected <select>, undefined if never wired up, and — the one that
+  // actually happens here — null, because the AddressPicker does not render
+  // a location <select> at all for an area with none (Uttara, Mirpur). A bare
+  // z.string().optional() rejects null outright, which would have failed
+  // profile saves for exactly those areas.
+  locationId: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => (v && v !== '' ? Number(v) : null)),
 });
 
 /** Referral codes are shown to other people, so avoid ambiguous characters. */
@@ -38,12 +49,13 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
     phone: formData.get('phone'),
     address: formData.get('address'),
     areaId: formData.get('areaId'),
+    locationId: formData.get('locationId'),
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'Please check the form.' };
   }
 
-  const { fullName, phone, address, areaId } = parsed.data;
+  const { fullName, phone, address, areaId, locationId } = parsed.data;
   const d = db();
 
   // Only active areas are selectable — a paused area must not accept bookings
@@ -55,6 +67,22 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
     .limit(1);
   if (!area) return { ok: false, error: 'That area is no longer available. Pick another.' };
 
+  // A location is validated against the area it claims to belong to, not
+  // trusted from the client. The picker keeps them in sync in the browser, but
+  // the server is what actually stops a mismatched pair — e.g. the area was
+  // just changed but a stale locationId from the old one is still in the
+  // submitted form — from being stored as though they agreed.
+  if (locationId !== null) {
+    const [location] = await d
+      .select({ id: schema.locations.id })
+      .from(schema.locations)
+      .where(and(eq(schema.locations.id, locationId), eq(schema.locations.areaId, areaId)))
+      .limit(1);
+    if (!location) {
+      return { ok: false, error: 'That location does not match the selected area.' };
+    }
+  }
+
   const existing = await d
     .select({ userId: schema.profiles.userId })
     .from(schema.profiles)
@@ -65,7 +93,7 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
     // The referral code is never regenerated: people have already shared it.
     await d
       .update(schema.profiles)
-      .set({ fullName, phone, address, areaId })
+      .set({ fullName, phone, address, areaId, locationId })
       .where(eq(schema.profiles.userId, customer.id));
   } else {
     // Retry on the astronomically unlikely code collision rather than failing
@@ -78,6 +106,7 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
           phone,
           address,
           areaId,
+          locationId,
           referralCode: generateReferralCode(),
         });
         break;
@@ -96,7 +125,7 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
     targetType: 'profile',
     targetId: customer.id,
     targetLabel: fullName,
-    detail: { areaId, phoneSet: Boolean(phone), addressSet: Boolean(address) },
+    detail: { areaId, locationId, phoneSet: Boolean(phone), addressSet: Boolean(address) },
   });
 
   revalidatePath('/account');

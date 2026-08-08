@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
-import { Field, Input, Select, Textarea } from '@/components/ui/input';
+import { Field, Input, Textarea } from '@/components/ui/input';
+import { AddressPicker, type GeographyForPicker } from '@/components/ui/address-picker';
 import { saveProfile } from './actions';
 
 type Profile = {
@@ -11,6 +12,7 @@ type Profile = {
   phone: string;
   address: string;
   areaId: number | null;
+  locationId: number | null;
 };
 
 function safeNext(next: string | null): string {
@@ -20,12 +22,12 @@ function safeNext(next: string | null): string {
 }
 
 export function ProfileForm({
-  areas,
+  geography,
   profile,
   next,
   defaultName,
 }: {
-  areas: { id: number; name: string }[];
+  geography: GeographyForPicker;
   profile: Profile | null;
   next: string | null;
   defaultName: string;
@@ -51,7 +53,7 @@ export function ProfileForm({
     router.refresh();
   }
 
-  if (areas.length === 0) {
+  if (geography.areas.length === 0) {
     return (
       <p className="text-[var(--color-muted)]">
         We are not accepting bookings in any area right now. Please check back shortly.
@@ -89,16 +91,12 @@ export function ProfileForm({
       </Field>
 
       <Field label="Area" htmlFor="areaId">
-        <Select id="areaId" name="areaId" required defaultValue={profile?.areaId ?? ''}>
-          <option value="" disabled>
-            Choose your area
-          </option>
-          {areas.map((area) => (
-            <option key={area.id} value={area.id}>
-              {area.name}
-            </option>
-          ))}
-        </Select>
+        <AddressPicker
+          areaSelectId="areaId"
+          geography={geography}
+          initialAreaId={profile?.areaId ?? null}
+          initialLocationId={profile?.locationId ?? null}
+        />
       </Field>
 
       <Field

@@ -29,6 +29,7 @@ export * from "./analytics";
 export * from "./technicians";
 export * from "./permissions";
 export * from "./tickets";
+export * from "./geography";
 // Separate database, separate binding — see src/audit.ts.
 export * from "./audit";
 export * from "./soft-delete";

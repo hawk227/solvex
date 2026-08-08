@@ -5,18 +5,21 @@ import { Plus, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/input';
-import { createArea, updateArea, type ActionResult } from './actions';
+import { createLocation, updateLocation, type ActionResult } from './actions';
 
-export type AreaRow = { id: number; name: string; zoneId: number | null; sort: number };
+export type LocationRow = { id: number; name: string; areaId: number; sort: number };
 
-export function AreaForm({
-  area,
-  zones,
+export function LocationForm({
+  areas,
+  location,
+  /** Preselects the area when adding from within that area's group. */
+  defaultAreaId,
 }: {
-  area?: AreaRow;
-  zones: { id: number; name: string }[];
+  areas: { id: number; name: string }[];
+  location?: LocationRow;
+  defaultAreaId?: number;
 }) {
-  const editing = Boolean(area);
+  const editing = Boolean(location);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -27,7 +30,9 @@ export function AreaForm({
     setError(undefined);
 
     const data = new FormData(e.currentTarget);
-    const result: ActionResult = area ? await updateArea(area.id, data) : await createArea(data);
+    const result: ActionResult = location
+      ? await updateLocation(location.id, data)
+      : await createLocation(data);
 
     setPending(false);
     if (!result.ok) {
@@ -47,54 +52,59 @@ export function AreaForm({
     >
       <DialogTrigger asChild>
         {editing ? (
-          <Button variant="ghost" size="icon" aria-label={`Edit ${area!.name}`}>
+          <Button variant="ghost" size="icon" aria-label={`Edit ${location!.name}`}>
             <Pencil className="h-4 w-4" />
           </Button>
         ) : (
-          <Button>
+          <Button variant="secondary" size="sm">
             <Plus className="h-4 w-4" />
-            Add area
+            Add location
           </Button>
         )}
       </DialogTrigger>
 
       <DialogContent
-        title={editing ? 'Edit area' : 'New service area'}
-        description="Customers can only book from areas that are active here."
+        title={editing ? 'Edit location' : 'New location'}
+        description="A neighbourhood or landmark inside an area, e.g. Dilkusha within Motijheel. Shown as the last step of the address picker."
       >
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <Field label="Area name" htmlFor="area-name">
-            <Input
-              id="area-name"
-              name="name"
-              required
-              defaultValue={area?.name ?? ''}
-              placeholder="Dhanmondi"
-            />
-          </Field>
-
-          <Field
-            label="Zone"
-            htmlFor="area-zone"
-            hint="Optional. Groups this area under a zone in the address picker."
-          >
+          <Field label="Area" htmlFor="location-area">
             <select
-              id="area-zone"
-              name="zoneId"
-              defaultValue={area?.zoneId ?? ''}
+              id="location-area"
+              name="areaId"
+              required
+              defaultValue={location?.areaId ?? defaultAreaId ?? ''}
               className="h-[var(--cms-input-height)] w-full rounded-[var(--cms-control-radius)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-[13px]"
             >
-              <option value="">No zone</option>
-              {zones.map((zone) => (
-                <option key={zone.id} value={zone.id}>
-                  {zone.name}
+              <option value="" disabled>
+                Choose an area
+              </option>
+              {areas.map((area) => (
+                <option key={area.id} value={area.id}>
+                  {area.name}
                 </option>
               ))}
             </select>
           </Field>
 
-          <Field label="Sort order" htmlFor="area-sort" hint="Lower numbers appear first.">
-            <Input id="area-sort" name="sort" type="number" min={0} defaultValue={area?.sort ?? 0} />
+          <Field label="Location name" htmlFor="location-name">
+            <Input
+              id="location-name"
+              name="name"
+              required
+              defaultValue={location?.name ?? ''}
+              placeholder="Dilkusha"
+            />
+          </Field>
+
+          <Field label="Sort order" htmlFor="location-sort" hint="Lower numbers appear first.">
+            <Input
+              id="location-sort"
+              name="sort"
+              type="number"
+              min={0}
+              defaultValue={location?.sort ?? 0}
+            />
           </Field>
 
           {error && (
@@ -108,7 +118,7 @@ export function AreaForm({
               <Button variant="secondary">Cancel</Button>
             </DialogClose>
             <Button type="submit" disabled={pending}>
-              {pending ? 'Saving…' : editing ? 'Save changes' : 'Create area'}
+              {pending ? 'Saving…' : editing ? 'Save changes' : 'Create location'}
             </Button>
           </div>
         </form>

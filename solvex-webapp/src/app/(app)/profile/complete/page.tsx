@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
+import { getGeography } from '@solvex/db';
 import { AuthCard } from '@/components/ui/input';
-import { getActiveAreas } from '@/lib/catalog';
+import { db } from '@/lib/cf';
 import { getProfile, requireCustomer } from '@/lib/session';
 import { ProfileForm } from './profile-form';
 
@@ -20,7 +21,7 @@ export default async function CompleteProfilePage({
     redirect(`/verify?email=${encodeURIComponent(customer.email)}`);
   }
 
-  const [areas, profile] = await Promise.all([getActiveAreas(), getProfile(customer.id)]);
+  const [geography, profile] = await Promise.all([getGeography(db()), getProfile(customer.id)]);
 
   return (
     <AuthCard
@@ -32,7 +33,7 @@ export default async function CompleteProfilePage({
       }
     >
       <ProfileForm
-        areas={areas}
+        geography={geography}
         profile={profile}
         next={next ?? null}
         defaultName={customer.name}

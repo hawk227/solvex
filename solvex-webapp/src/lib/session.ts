@@ -17,6 +17,8 @@ export type CustomerProfile = {
   phone: string;
   address: string;
   areaId: number | null;
+  /** Finest-grained address pick. Informational only — see schema note on profiles.locationId. */
+  locationId: number | null;
   referralCode: string;
 };
 
@@ -38,6 +40,7 @@ export async function getProfile(userId: string): Promise<CustomerProfile | null
       phone: schema.profiles.phone,
       address: schema.profiles.address,
       areaId: schema.profiles.areaId,
+      locationId: schema.profiles.locationId,
       referralCode: schema.profiles.referralCode,
     })
     .from(schema.profiles)

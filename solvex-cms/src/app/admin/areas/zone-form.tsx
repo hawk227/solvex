@@ -5,18 +5,12 @@ import { Plus, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/input';
-import { createArea, updateArea, type ActionResult } from './actions';
+import { createZone, updateZone, type ActionResult } from './actions';
 
-export type AreaRow = { id: number; name: string; zoneId: number | null; sort: number };
+export type ZoneRow = { id: number; name: string; sort: number };
 
-export function AreaForm({
-  area,
-  zones,
-}: {
-  area?: AreaRow;
-  zones: { id: number; name: string }[];
-}) {
-  const editing = Boolean(area);
+export function ZoneForm({ zone }: { zone?: ZoneRow }) {
+  const editing = Boolean(zone);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -27,7 +21,7 @@ export function AreaForm({
     setError(undefined);
 
     const data = new FormData(e.currentTarget);
-    const result: ActionResult = area ? await updateArea(area.id, data) : await createArea(data);
+    const result: ActionResult = zone ? await updateZone(zone.id, data) : await createZone(data);
 
     setPending(false);
     if (!result.ok) {
@@ -47,54 +41,34 @@ export function AreaForm({
     >
       <DialogTrigger asChild>
         {editing ? (
-          <Button variant="ghost" size="icon" aria-label={`Edit ${area!.name}`}>
+          <Button variant="ghost" size="icon" aria-label={`Edit ${zone!.name}`}>
             <Pencil className="h-4 w-4" />
           </Button>
         ) : (
           <Button>
             <Plus className="h-4 w-4" />
-            Add area
+            Add zone
           </Button>
         )}
       </DialogTrigger>
 
       <DialogContent
-        title={editing ? 'Edit area' : 'New service area'}
-        description="Customers can only book from areas that are active here."
+        title={editing ? 'Edit zone' : 'New zone'}
+        description="Groups areas for the address picker, e.g. Central Dhaka, Old Dhaka. Purely organisational — it does not affect booking eligibility."
       >
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <Field label="Area name" htmlFor="area-name">
+          <Field label="Zone name" htmlFor="zone-name">
             <Input
-              id="area-name"
+              id="zone-name"
               name="name"
               required
-              defaultValue={area?.name ?? ''}
-              placeholder="Dhanmondi"
+              defaultValue={zone?.name ?? ''}
+              placeholder="Central Dhaka"
             />
           </Field>
 
-          <Field
-            label="Zone"
-            htmlFor="area-zone"
-            hint="Optional. Groups this area under a zone in the address picker."
-          >
-            <select
-              id="area-zone"
-              name="zoneId"
-              defaultValue={area?.zoneId ?? ''}
-              className="h-[var(--cms-input-height)] w-full rounded-[var(--cms-control-radius)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-[13px]"
-            >
-              <option value="">No zone</option>
-              {zones.map((zone) => (
-                <option key={zone.id} value={zone.id}>
-                  {zone.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Sort order" htmlFor="area-sort" hint="Lower numbers appear first.">
-            <Input id="area-sort" name="sort" type="number" min={0} defaultValue={area?.sort ?? 0} />
+          <Field label="Sort order" htmlFor="zone-sort" hint="Lower numbers appear first.">
+            <Input id="zone-sort" name="sort" type="number" min={0} defaultValue={zone?.sort ?? 0} />
           </Field>
 
           {error && (
@@ -108,7 +82,7 @@ export function AreaForm({
               <Button variant="secondary">Cancel</Button>
             </DialogClose>
             <Button type="submit" disabled={pending}>
-              {pending ? 'Saving…' : editing ? 'Save changes' : 'Create area'}
+              {pending ? 'Saving…' : editing ? 'Save changes' : 'Create zone'}
             </Button>
           </div>
         </form>
