@@ -131,11 +131,12 @@ export default async function CustomersPage({ searchParams }: PageProps<'/admin/
                   <Th>Credit</Th>
                   <Th>Referrals</Th>
                   <Th>Joined</Th>
+                  <Th />
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 && (
-                  <EmptyRow colSpan={8}>
+                  <EmptyRow colSpan={9}>
                     {query
                       ? 'No customer matches that search.'
                       : 'No customers yet. A customer appears here once they complete their profile.'}
@@ -190,6 +191,14 @@ export default async function CustomersPage({ searchParams }: PageProps<'/admin/
                     </Td>
                     <Td className="whitespace-nowrap text-xs text-[var(--color-muted)]">
                       {formatDate(row.createdAt.toISOString().slice(0, 10))}
+                    </Td>
+                    <Td>
+                      <Link
+                        href={`/admin/orders/new?userId=${row.userId}`}
+                        className="text-[var(--color-primary)] hover:underline"
+                      >
+                        New order
+                      </Link>
                     </Td>
                   </Tr>
                 ))}

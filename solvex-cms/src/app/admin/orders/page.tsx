@@ -6,6 +6,7 @@ import { requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
 import { formatDate, formatTaka } from '@/lib/format';
 import { STATUS_LABEL as LABEL, STATUS_TONE as TONE } from './transitions';
@@ -77,6 +78,11 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
         <PageHeader
           title="Orders"
           subtitle={`${rows.length} shown · ${byStatus.get('PENDING') ?? 0} awaiting approval`}
+          actions={
+            <Button asChild>
+              <Link href="/admin/orders/new">New order</Link>
+            </Button>
+          }
         />
 
         <form method="get" className="mb-5 flex flex-wrap items-center gap-2">
