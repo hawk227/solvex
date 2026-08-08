@@ -54,7 +54,15 @@ export async function createWalkInCustomer(formData: FormData): Promise<CreateCu
     locationId: formData.get('locationId'),
   });
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Please check the form.' };
+    const error = parsed.error.issues[0]?.message ?? 'Please check the form.';
+    await audit({
+      action: 'customer.create-walkin',
+      module: 'customers',
+      outcome: 'DENIED',
+      reason: error,
+      detail: { phone: formData.get('phone') },
+    });
+    return { ok: false, error };
   }
 
   const { fullName, phone, address, areaId, locationId } = parsed.data;
@@ -72,7 +80,16 @@ export async function createWalkInCustomer(formData: FormData): Promise<CreateCu
     .from(schema.areas)
     .where(and(eq(schema.areas.id, areaId), eq(schema.areas.active, true)))
     .limit(1);
-  if (!area) return { ok: false, error: 'That area is no longer available. Pick another.' };
+  if (!area) {
+    await audit({
+      action: 'customer.create-walkin',
+      module: 'customers',
+      outcome: 'DENIED',
+      reason: 'area not available',
+      detail: { phone, areaId },
+    });
+    return { ok: false, error: 'That area is no longer available. Pick another.' };
+  }
 
   const userId = crypto.randomUUID();
   const email = synthesizeWalkInEmail(phone);
@@ -81,6 +98,13 @@ export async function createWalkInCustomer(formData: FormData): Promise<CreateCu
     await d.insert(schema.user).values({ id: userId, name: fullName, email, emailVerified: false });
   } catch (err) {
     if (isUniqueViolation(err, 'user.email')) {
+      await audit({
+        action: 'customer.create-walkin',
+        module: 'customers',
+        outcome: 'ERROR',
+        reason: 'duplicate phone (walk-in email collision)',
+        detail: { phone },
+      });
       return { ok: false, error: 'A customer with this phone already exists. Refresh and search again.' };
     }
     throw err;
