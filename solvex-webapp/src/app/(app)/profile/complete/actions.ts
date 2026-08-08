@@ -3,7 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { schema, isUniqueViolation, normaliseBdMobile } from '@solvex/db';
+import {
+  schema,
+  isUniqueViolation,
+  normaliseBdMobile,
+  findProfileByPhone,
+  mergeWalkInIntoRealAccount,
+} from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireCustomer } from '@/lib/session';
 import { audit } from '@/lib/audit';
@@ -126,6 +132,35 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
     targetLabel: fullName,
     detail: { areaId, locationId, phoneSet: Boolean(phone), addressSet: Boolean(address) },
   });
+
+  // A walk-in customer created from the CMS phone-order flow uses a synthetic
+  // email keyed to their phone number (see @solvex/db's walkin.ts). If this
+  // real signup used the same phone, fold that walk-in's order and credit
+  // history onto this account. A failure here must never block the customer's
+  // own profile save, which has already succeeded by this point.
+  const walkInMatch = await findProfileByPhone(d, phone);
+  if (walkInMatch && walkInMatch.userId !== customer.id && walkInMatch.isWalkIn) {
+    try {
+      const merged = await mergeWalkInIntoRealAccount(d, {
+        walkInUserId: walkInMatch.userId,
+        realUserId: customer.id,
+      });
+      await audit({
+        action: 'profile.merge-walkin',
+        targetType: 'profile',
+        targetId: customer.id,
+        detail: merged,
+      });
+    } catch (err) {
+      await audit({
+        action: 'profile.merge-walkin',
+        targetType: 'profile',
+        targetId: customer.id,
+        outcome: 'ERROR',
+        reason: err instanceof Error ? err.message : 'unknown error',
+      });
+    }
+  }
 
   revalidatePath('/account');
   revalidatePath('/profile/complete');
