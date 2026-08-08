@@ -216,7 +216,9 @@ export default async function ServiceDetailPage({ params }: PageProps<'/admin/se
                     <li><span className="font-medium">Resource cost:</span> {costing?.resourceCost ?? '—'}</li>
                     <li><span className="font-medium">Service time:</span> {costing?.serviceTimeLabel ?? '—'}</li>
                     <li><span className="font-medium">Travel cost:</span> {costing?.travelCost ?? '—'}</li>
-                    <li><span className="font-medium">Internal cost:</span> {costing?.internalCost ?? '—'}</li>
+                    <li className="text-[var(--color-muted)]">
+                      Internal cost requires manage access to view. Ask an owner if you need to see it.
+                    </li>
                   </ul>
                 </>
               ) : (
