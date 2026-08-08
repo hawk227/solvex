@@ -163,6 +163,77 @@ export async function updateServiceContent(id: number, formData: FormData): Prom
   return { ok: true };
 }
 
+const CostingInput = z.object({
+  material: optionalText(200),
+  tools: optionalText(300),
+  resourceCount: optionalText(20),
+  resourceCost: optionalInt(0, 100_000),
+  serviceTimeLabel: optionalText(50),
+  travelCost: optionalInt(0, 100_000),
+  internalCost: optionalInt(0, 1_000_000),
+  sopMd: optionalText(4000),
+});
+
+export async function updateServiceCosting(id: number, formData: FormData): Promise<ActionResult> {
+  await requireManage('catalog');
+
+  const parsed = CostingInput.safeParse({
+    material: formData.get('material'),
+    tools: formData.get('tools'),
+    resourceCount: formData.get('resourceCount'),
+    resourceCost: formData.get('resourceCost') || undefined,
+    serviceTimeLabel: formData.get('serviceTimeLabel'),
+    travelCost: formData.get('travelCost') || undefined,
+    internalCost: formData.get('internalCost') || undefined,
+    sopMd: formData.get('sopMd'),
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid input.' };
+  }
+
+  const { material, tools, resourceCount, resourceCost, serviceTimeLabel, travelCost, internalCost, sopMd } =
+    parsed.data;
+
+  await db()
+    .insert(schema.serviceCosting)
+    .values({
+      serviceId: id,
+      material: material || null,
+      tools: tools || null,
+      resourceCount: resourceCount || null,
+      resourceCost: resourceCost ?? null,
+      serviceTimeLabel: serviceTimeLabel || null,
+      travelCost: travelCost ?? null,
+      internalCost: internalCost ?? null,
+      sopMd: sopMd || null,
+    })
+    .onConflictDoUpdate({
+      target: schema.serviceCosting.serviceId,
+      set: {
+        material: material || null,
+        tools: tools || null,
+        resourceCount: resourceCount || null,
+        resourceCost: resourceCost ?? null,
+        serviceTimeLabel: serviceTimeLabel || null,
+        travelCost: travelCost ?? null,
+        internalCost: internalCost ?? null,
+        sopMd: sopMd || null,
+      },
+    });
+
+  // Not the values themselves — internalCost in particular is sensitive
+  // margin data, and the log only needs to show that it changed.
+  await audit({
+    action: 'catalog.service.costing.update',
+    module: 'catalog',
+    targetType: 'service',
+    targetId: id,
+  });
+
+  revalidatePath(`/admin/services/${id}`);
+  return { ok: true };
+}
+
 export async function setServiceActive(id: number, active: boolean): Promise<ActionResult> {
   await requireManage('catalog');
   await db().update(schema.services).set({ active }).where(eq(schema.services.id, id));

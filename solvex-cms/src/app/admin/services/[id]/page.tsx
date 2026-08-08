@@ -13,6 +13,7 @@ import { Tabs } from '@/components/ui/tabs';
 import { ContentEditor } from './content-editor';
 import { VariablesEditor, type Group } from './variables-editor';
 import { PriceMatrix, type MatrixRow } from './price-matrix';
+import { CostingEditor } from './costing-editor';
 
 export default async function ServiceDetailPage({ params }: PageProps<'/admin/services/[id]'>) {
   const employee = await requireView('catalog');
@@ -27,7 +28,7 @@ export default async function ServiceDetailPage({ params }: PageProps<'/admin/se
   const service = await d.query.services.findFirst({ where: eq(schema.services.id, serviceId) });
   if (!service) notFound();
 
-  const [category, rawGroups, prices] = await Promise.all([
+  const [category, rawGroups, prices, costingRows] = await Promise.all([
     d.query.categories.findFirst({ where: eq(schema.categories.id, service.categoryId) }),
     d
       .select()
@@ -35,7 +36,9 @@ export default async function ServiceDetailPage({ params }: PageProps<'/admin/se
       .where(eq(schema.variableGroups.serviceId, serviceId))
       .orderBy(asc(schema.variableGroups.sort)),
     d.select().from(schema.servicePrices).where(eq(schema.servicePrices.serviceId, serviceId)),
+    d.select().from(schema.serviceCosting).where(eq(schema.serviceCosting.serviceId, serviceId)),
   ]);
+  const costing = costingRows[0] ?? null;
 
   const groups: Group[] = await Promise.all(
     rawGroups.map(async (g) => ({
@@ -198,6 +201,36 @@ export default async function ServiceDetailPage({ params }: PageProps<'/admin/se
                     />
                   </CardBody>
                 </Card>
+              ),
+            },
+            {
+              value: 'costing',
+              label: 'Costing',
+              content: !editable ? (
+                <>
+                  <ReadOnlyNotice what="services" />
+                  <ul className="mt-4 flex flex-col gap-2 text-[13px]">
+                    <li><span className="font-medium">Material:</span> {costing?.material ?? '—'}</li>
+                    <li><span className="font-medium">Tools:</span> {costing?.tools ?? '—'}</li>
+                    <li><span className="font-medium">Resource count:</span> {costing?.resourceCount ?? '—'}</li>
+                    <li><span className="font-medium">Resource cost:</span> {costing?.resourceCost ?? '—'}</li>
+                    <li><span className="font-medium">Service time:</span> {costing?.serviceTimeLabel ?? '—'}</li>
+                    <li><span className="font-medium">Travel cost:</span> {costing?.travelCost ?? '—'}</li>
+                    <li><span className="font-medium">Internal cost:</span> {costing?.internalCost ?? '—'}</li>
+                  </ul>
+                </>
+              ) : (
+                <CostingEditor
+                  serviceId={serviceId}
+                  material={costing?.material ?? ''}
+                  tools={costing?.tools ?? ''}
+                  resourceCount={costing?.resourceCount ?? ''}
+                  resourceCost={costing?.resourceCost != null ? String(costing.resourceCost) : ''}
+                  serviceTimeLabel={costing?.serviceTimeLabel ?? ''}
+                  travelCost={costing?.travelCost != null ? String(costing.travelCost) : ''}
+                  internalCost={costing?.internalCost != null ? String(costing.internalCost) : ''}
+                  sopMd={costing?.sopMd ?? ''}
+                />
               ),
             },
           ]}
