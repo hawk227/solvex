@@ -6,6 +6,7 @@ import {
   synthesizeWalkInEmail,
   isWalkInEmail,
   findProfileByPhone,
+  findWalkInByPhone,
   mergeWalkInIntoRealAccount,
 } from '../src/walkin';
 
@@ -67,6 +68,41 @@ describe('findProfileByPhone', () => {
   it('returns null when no profile has that phone', async () => {
     const db = getDb(env.DB);
     expect(await findProfileByPhone(db, '+8801799999999')).toBeNull();
+  });
+});
+
+describe('findWalkInByPhone', () => {
+  it('finds a walk-in by its deterministic synthetic email', async () => {
+    const db = getDb(env.DB);
+    const phone = '+8801777777777';
+    const userId = await makeCustomer(db, { phone, email: synthesizeWalkInEmail(phone) });
+
+    expect(await findWalkInByPhone(db, phone)).toEqual({ userId });
+  });
+
+  it('returns null when no walk-in exists for that phone', async () => {
+    const db = getDb(env.DB);
+    expect(await findWalkInByPhone(db, '+8801788888888')).toBeNull();
+  });
+
+  it('returns the walk-in, not a real profile sharing the same phone, regardless of insertion order', async () => {
+    const db = getDb(env.DB);
+    const phone = '+8801799990000';
+
+    // The real customer's own profile is inserted FIRST, so it would have the
+    // lower rowid — a plain phone search with no ORDER BY could return this
+    // row instead of the walk-in's, which is exactly the bug this function
+    // fixes. Looking up by the deterministic synthetic email sidesteps the
+    // ambiguity entirely.
+    const realUserId = await makeCustomer(db, {
+      phone,
+      email: `real-${crypto.randomUUID()}@example.com`,
+    });
+    const walkInUserId = await makeCustomer(db, { phone, email: synthesizeWalkInEmail(phone) });
+
+    const found = await findWalkInByPhone(db, phone);
+    expect(found).toEqual({ userId: walkInUserId });
+    expect(found?.userId).not.toBe(realUserId);
   });
 });
 

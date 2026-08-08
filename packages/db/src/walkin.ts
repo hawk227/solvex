@@ -44,6 +44,25 @@ export async function findProfileByPhone(
 }
 
 /**
+ * Look up a walk-in account by the phone that would have created it, via its
+ * deterministic synthetic email — not a phone search. `user.email` is
+ * uniquely indexed, so this has no ordering ambiguity even when a real
+ * customer's own profile shares the same phone number (e.g. they are
+ * correcting it to match a number staff already used for a walk-in booking).
+ */
+export async function findWalkInByPhone(
+  db: Db,
+  normalizedPhone: string,
+): Promise<{ userId: string } | null> {
+  const [row] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, synthesizeWalkInEmail(normalizedPhone)))
+    .limit(1);
+  return row ? { userId: row.id } : null;
+}
+
+/**
  * Fold a walk-in's order and credit history onto a real account the same
  * person just signed up with, then remove the walk-in identity.
  *

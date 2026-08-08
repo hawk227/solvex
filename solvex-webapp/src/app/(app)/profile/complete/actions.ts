@@ -7,7 +7,7 @@ import {
   schema,
   isUniqueViolation,
   normaliseBdMobile,
-  findProfileByPhone,
+  findWalkInByPhone,
   mergeWalkInIntoRealAccount,
 } from '@solvex/db';
 import { db } from '@/lib/cf';
@@ -138,8 +138,8 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
   // real signup used the same phone, fold that walk-in's order and credit
   // history onto this account. A failure here must never block the customer's
   // own profile save, which has already succeeded by this point.
-  const walkInMatch = await findProfileByPhone(d, phone);
-  if (walkInMatch && walkInMatch.userId !== customer.id && walkInMatch.isWalkIn) {
+  const walkInMatch = await findWalkInByPhone(d, phone);
+  if (walkInMatch) {
     try {
       const merged = await mergeWalkInIntoRealAccount(d, {
         walkInUserId: walkInMatch.userId,
