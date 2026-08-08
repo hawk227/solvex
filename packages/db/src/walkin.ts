@@ -2,6 +2,8 @@ import { eq } from 'drizzle-orm';
 import type { Db } from './index';
 import { profiles } from './schema/customer';
 import { user } from './schema/customer-auth';
+import { orders } from './schema/orders';
+import { creditLedger } from './schema/referral';
 
 export const WALKIN_EMAIL_DOMAIN = 'walkin.solvex.local';
 
@@ -39,4 +41,36 @@ export async function findProfileByPhone(
 
   if (!row) return null;
   return { userId: row.userId, fullName: row.fullName, isWalkIn: isWalkInEmail(row.email) };
+}
+
+/**
+ * Fold a walk-in's order and credit history onto a real account the same
+ * person just signed up with, then remove the walk-in identity.
+ *
+ * `orders.userId` and `credit_ledger.userId` are plain text columns with no FK
+ * to `user.id` (see their schema files), so this is a repoint, not a cascade.
+ * The walk-in `user` row is deleted last — its `profiles` row cascades with it
+ * (that FK has been `onDelete: 'cascade'` since the original CREATE TABLE,
+ * unlike columns added later via ALTER TABLE elsewhere in this schema, so the
+ * cascade here is live).
+ */
+export async function mergeWalkInIntoRealAccount(
+  db: Db,
+  args: { walkInUserId: string; realUserId: string },
+): Promise<{ ordersMoved: number; creditRowsMoved: number }> {
+  const movedOrders = await db
+    .update(orders)
+    .set({ userId: args.realUserId })
+    .where(eq(orders.userId, args.walkInUserId))
+    .returning({ id: orders.id });
+
+  const movedCredit = await db
+    .update(creditLedger)
+    .set({ userId: args.realUserId })
+    .where(eq(creditLedger.userId, args.walkInUserId))
+    .returning({ id: creditLedger.id });
+
+  await db.delete(user).where(eq(user.id, args.walkInUserId));
+
+  return { ordersMoved: movedOrders.length, creditRowsMoved: movedCredit.length };
 }
