@@ -10,11 +10,12 @@ import {
   findProfileByPhone,
 } from '@solvex/db';
 import { db } from '@/lib/cf';
-import { requireView } from '@/lib/session';
+import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
 import { Card, CardBody } from '@/components/ui/card';
 import { Field, Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { ReadOnlyNotice } from '@/components/ui/read-only-notice';
 import { NewCustomerForm } from './new-customer-form';
 import { BookingForm } from './booking-form';
 
@@ -39,7 +40,7 @@ function Shell({ subtitle, children }: { subtitle?: string; children: React.Reac
 }
 
 export default async function NewOrderPage({ searchParams }: PageProps<'/admin/orders/new'>) {
-  await requireView('orders');
+  const employee = await requireView('orders');
   const sp = await searchParams;
   const phoneParam = (Array.isArray(sp.phone) ? sp.phone[0] : sp.phone) ?? '';
   const userIdParam = Array.isArray(sp.userId) ? sp.userId[0] : sp.userId;
@@ -75,13 +76,17 @@ export default async function NewOrderPage({ searchParams }: PageProps<'/admin/o
 
     return (
       <Shell subtitle={profile.fullName}>
-        <BookingForm
-          userId={userIdParam}
-          catalog={catalog}
-          creditBalance={creditBalance}
-          initialAvailability={availability}
-          initialDate={today}
-        />
+        {canManage(employee, 'orders') ? (
+          <BookingForm
+            userId={userIdParam}
+            catalog={catalog}
+            creditBalance={creditBalance}
+            initialAvailability={availability}
+            initialDate={today}
+          />
+        ) : (
+          <ReadOnlyNotice what="orders" />
+        )}
       </Shell>
     );
   }
@@ -114,7 +119,11 @@ export default async function NewOrderPage({ searchParams }: PageProps<'/admin/o
       const geography = await getGeography(d);
       return (
         <Shell subtitle="No customer found for that number — create one.">
-          <NewCustomerForm phone={normalized} geography={geography} />
+          {canManage(employee, 'customers') ? (
+            <NewCustomerForm phone={normalized} geography={geography} />
+          ) : (
+            <ReadOnlyNotice what="customers" />
+          )}
         </Shell>
       );
     }
