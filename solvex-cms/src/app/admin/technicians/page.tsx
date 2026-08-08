@@ -1,5 +1,5 @@
 import { asc, eq, sql } from 'drizzle-orm';
-import { schema, notDeleted } from '@solvex/db';
+import { schema, notDeleted, formatBdMobile } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { ActiveToggle } from '@/components/ui/active-toggle';
 import { DeleteButton } from '@/components/ui/delete-button';
 import { Table, TableWrap, Th, Td, Tr, EmptyRow } from '@/components/ui/table';
-import { formatBdMobile } from '@/lib/phone';
 import { TechnicianForm } from './technician-form';
 import { setTechnicianActive } from './actions';
 

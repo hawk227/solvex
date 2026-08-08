@@ -18,6 +18,7 @@ export * from "./content";
 export * from "./aggregates";
 export * from "./referral";
 export * from "./place-order";
+export * from './phone';
 
 // Types and enums used across both apps. The `schema` namespace export above
 // carries the tables; these are the accompanying value/type exports.

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTechnicianOptions } from '@solvex/db';
+import { getTechnicianOptions, formatBdMobile } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { canManage, requireView } from '@/lib/session';
 import { Topbar, PageHeader } from '@/components/layout/page-header';
@@ -8,7 +8,6 @@ import { ReadOnlyNotice } from '@/components/ui/read-only-notice';
 import { Card, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatDateTime, formatTaka } from '@/lib/format';
-import { formatBdMobile } from '@/lib/phone';
 import {
   getAdminOrder,
   getAdminOrderEvents,

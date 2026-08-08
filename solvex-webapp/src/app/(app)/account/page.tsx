@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { MapPin, Phone, User } from 'lucide-react';
+import { formatBdMobile } from '@solvex/db';
 import { Container, Section } from '@/components/layout/container';
 import { Button } from '@/components/ui/button';
 import { getActiveAreas } from '@/lib/catalog';
 import { getReferralSummary, listMyReferrals } from '@/lib/referrals';
 import { getProfile, requireCustomer } from '@/lib/session';
-import { formatBdMobile } from '@/lib/phone';
 import { formatTaka } from '@/lib/format';
 import { ReferralCode } from './referral-code';
 

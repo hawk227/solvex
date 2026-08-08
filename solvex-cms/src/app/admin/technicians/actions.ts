@@ -3,12 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { isUniqueViolation, schema, setTechnicianCoverage } from '@solvex/db';
+import { isUniqueViolation, normaliseBdMobile, schema, setTechnicianCoverage } from '@solvex/db';
 import { db } from '@/lib/cf';
 import { requireManage } from '@/lib/session';
 import { audit } from '@/lib/audit';
 import { optionalText } from '@/lib/form';
-import { normaliseBdMobile } from '@/lib/phone';
 
 export type ActionResult = { ok: true; id?: number } | { ok: false; error: string };
 

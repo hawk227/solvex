@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normaliseBdMobile } from './phone';
+import { normaliseBdMobile } from '../src/phone';
 
 describe('normaliseBdMobile', () => {
   it('accepts the plain local form', () => {
